@@ -10,7 +10,7 @@ program shobu_sim;
 {$REFERENCE System.Windows.Forms.dll}
 
 uses Cursor, MyTimers, Procs, Achievements, Inventory, Tutorial, Draw, Anim, Chat, Menu,
-    TextToSpeech, Dialogue, SlashingMinigame, ButtonMashMinigames, EscapeRooms;
+    TextToSpeech, Dialogue, SlashingMinigame, ButtonMashMinigames, EscapeRooms, Scenes;
 uses _Log;
 
 {$DEFINE DOOBUG} // todo
@@ -1707,80 +1707,81 @@ end;
 
 {$ENDREGION}
 
+{$REGION сцены}
+var
+    Scene5 := new FinalScene(() -> begin end, 'финал');
+    Scene4 := new PlayableScene(PART4, 'драка с костылём', Scene5);
+    Scene3 := new Cutscene(PART3, 'диалог с ребятами', Scene4);
+    Scene2 := new PlayableScene(PART2, 'подъезд', Scene3);
+    Scene1 := new PlayableScene(PART1, 'квартира', Scene2);
+{$ENDREGION}
+
 {$REGION main}
 function GAMELOOP: boolean;
-const
-    FINAL_PART: byte = 3;// todo
 var
-    CUR_PART: byte := 0;
+    CUR_PART: Scene;
 begin
     Result := False;
     Inventory.Reset;
     Route.SetRoute(Solo);
-    // todo выбор главы после прохождения игры 1 раз? как понимать какие главы разблокированы?
+    CUR_PART := Scene1;
     repeat
-        CUR_PART += 1;
-        // части просто проходимые без геймоверов:
-        case CUR_PART of
-            3: PART3;
-        // ^^^ todo сюда PARTы-процедуры без геймовера
-        else
+        if (CUR_PART is Scenes.PlayableScene) then
         // части с возможностью геймовера:
-            begin
-                _Log.Log('=== часть: ' + CUR_PART.ToString);
-                Inventory.Save;
-                var PASSED: boolean;
-                repeat
-                    Inventory.Load;
-                    case CUR_PART of
-                        1: PASSED := PART1;
-                        2: PASSED := PART2;
-                            // todo сюда PARTы-функции где есть геймовер
-                    end; // case CUR_PART end (вложенный)
-                    if PASSED then break else
+        begin
+            _Log.Log('=== часть: ' + CUR_PART.ToString);
+            _Log.Log('=== след.: ' + CUR_PART.ToString);
+            Inventory.Save;
+            var PASSED: boolean;
+            repeat
+                Inventory.Load;
+                PASSED := (CUR_PART as PlayableScene).Passed;
+                if PASSED then break else
+                begin
+                    achGameOver.Achieve;
+                    _Log.Log('=== геймовер');
+                    Anim.Next3;
+                    TxtClr(Color.Red);
+                    writeln('G A M E   O V E R');
+                    BeepWait(700, 300);
+                    BeepWait(600, 300);
+                    BeepWait(450, 500);
+                    writeln;
+                    TxtClr(Color.Green);
+                    writeln('Вернуться на последнюю контрольную точку? (Y/N)');
+                    writeln;
+                    Cursor.GoTop(-1);
+                    if YN then
                     begin
-                        achGameOver.Achieve;
-                        _Log.Log('=== геймовер');
+                        writeln;
+                        WriteEqualsLine;
                         Anim.Next3;
-                        TxtClr(Color.Red);
-                        writeln('G A M E   O V E R');
-                        BeepWait(700, 300);
-                        BeepWait(600, 300);
-                        BeepWait(450, 500);
-                        writeln;
-                        TxtClr(Color.Green);
-                        writeln('Вернуться на последнюю контрольную точку? (Y/N)');
-                        writeln;
-                        Cursor.GoTop(-1);
+                    end
+                    else begin
+                        write('Начать заново? (Y/N)');
                         if YN then
                         begin
-                            writeln;
-                            WriteEqualsLine;
-                            Anim.Next3;
+                            _Log.Log('=== РЕСТАРТ');
+                            TITLESCREEN;
+                            exit;
                         end
-                        else begin
-                            write('Начать заново? (Y/N)');
-                            if YN then
-                            begin
-                                _Log.Log('=== РЕСТАРТ');
-                                TITLESCREEN;
-                                exit;
-                            end
-                            else STOP(True);
-                        end;
+                        else STOP(True);
                     end;
-                until False; // repeat end
-                writeln;
-                Anim.Next3;
-                TxtClr(Color.Green);
-                writeln('Контрольная точка.');
-                Anim.Next1;
-                writelnx2;
-                Console.Beep;
-                _Log.Log('=== чекпоинт: ' + CUR_PART.ToString);
-            end;
-        end; // case CUR_PART end (внешний)
-    until CUR_PART >= FINAL_PART;
+                end;
+            until False; // repeat end
+            writeln;
+            Anim.Next3;
+            TxtClr(Color.Green);
+            writeln('Контрольная точка.');
+            Anim.Next1;
+            writelnx2;
+            Console.Beep;
+            _Log.Log('=== чекпоинт: ' + CUR_PART.ToString);
+        end
+        // части просто проходимые без геймоверов:
+        else (CUR_PART as Cutscene).Run;
+        CUR_PART := CUR_PART.next;
+    until (CUR_PART = nil);
     TxtClr(Color.Cyan);
     writeln('<=== TO BE CONTINUED...');
     writeln;
