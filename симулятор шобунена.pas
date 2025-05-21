@@ -25,16 +25,15 @@ const
 {$REGION руты}
 type
     
-    route_enum = (Solo, Rita, Trip, Roma, RomaOrTrip);
+    route_enum = (Solo, Rita, Trip, Roma);
     
     Route = static class
     private
         static current_route: route_enum;
     public
-        static TextedVasya, TextedRita: boolean;
+        static TextedVasya, TextedRita, TextedRoma: boolean;
         static procedure SetRoute(newroute: route_enum) := current_route := newroute;
         static function GetRoute(): route_enum := current_route;
-        static function RomaEvent: boolean := (current_route = Roma) or (current_route = RomaOrTrip);
     end;// static class end
 // type end
 {$ENDREGION}
@@ -247,10 +246,9 @@ var
 function PART1: boolean;
 var
     charger_location: byte := Random(7);
-    broke_bed, broke_window, broke_box, broke_laptop, burned_laptop, broke_table, changed_clothes,
-    charged_laptop, found_charger, tried_breaking_wardrobe, hit_table, watched_utub, torrenting_movies,
-    played_cossacks, played_megamuzhik, programmed, used_empty_hdd, saw_matrix, texted_trip, texted_roma,
-    tried_texting_rita, first_texted_roma_then_trip: boolean;
+    broke_bed, broke_window, broke_box, broke_laptop, burned_laptop, broke_table, changed_clothes, charged_laptop,
+    found_charger, tried_breaking_wardrobe, hit_table, watched_utub, torrenting_movies, played_cossacks,
+    played_megamuzhik, programmed, used_empty_hdd, saw_matrix, texted_trip, tried_texting_rita: boolean;
     
     {$REGION чаты}
     procedure chat_prompt;
@@ -258,7 +256,7 @@ var
         print('Кому ты напишешь?');
         if not Route.TextedVasya then print('Васе?');
         if not texted_trip then print('Трипу?');
-        if not texted_roma then
+        if not Route.TextedRoma then
         begin
             print('Роме?');
             if not tried_texting_rita then print('Рите?')
@@ -306,7 +304,7 @@ var
                         Chat.Response('Привет, всё отлично.', 'Правда, проснулся совсем недавно.');
                         Chat.Enter('Эх твой режим сна как всегда');
                         Chat.Response('Хе-хе.', 'Ладно, говори, что там по новостям.');
-                        if texted_roma then
+                        if Route.TextedRoma then
                         begin
                             Chat.Enter('Мы с ромой собрались на тусу');
                             Chat.Response('На стоянке которая?');
@@ -322,11 +320,10 @@ var
                         Chat.Enter('Ок звучит неплохо давай');
                         writelnx2;
                         texted_trip := True;
-                        if texted_roma then first_texted_roma_then_trip := True
-                        else writeln('Ты договорился встретиться с Трипом у гаражей.');
+                        if not Route.TextedRoma then writeln('Ты договорился встретиться с Трипом у гаражей.');
                     end;
                 'ROMA':
-                    if texted_roma then writeln('Ты уже писал Роме!') else
+                    if Route.TextedRoma then writeln('Ты уже писал Роме!') else
                     begin
                         Chat.Name := ('Рома Кафератор');
                         Chat.DrawTop;
@@ -348,13 +345,13 @@ var
                             Chat.Response('Я С НИМ ПОБАЗАРЮ ПРО ЭТО', 'КАРОЧ ДО СВЯЗИ');
                         end;
                         writelnx2;
-                        texted_roma := True;
+                        Route.TextedRoma := True;
                         writeln('Ты договорился пойти с Ромой на "тусу" на стоянке.');
                         if tried_texting_rita then writeln('И кстати, Рита тем временем снова появилась в сети!');
                     end;
                 'RITA':
                     if Route.TextedRita then writeln('Ты уже писал Рите!')
-                    else if texted_roma then
+                    else if Route.TextedRoma then
                     begin
                         Chat.Name := ('Маргарита Тесакова');
                         Chat.DrawTop;
@@ -1210,6 +1207,7 @@ begin
     Result := False;
     Route.TextedRita := False;
     Route.TextedVasya := False;
+    Route.TextedRoma := False;
     TxtClr(Color.White);
     writeln('Тебя зовут Саня Шобунен.');
     writeln('Ты живёшь в старенькой многоэтажке в московском районе Чертаново.');
@@ -1494,7 +1492,7 @@ begin
             end;
         end; // case end
     end; // while end
-    if texted_roma then Route.SetRoute(first_texted_roma_then_trip ? RomaOrTrip : Roma)
+    if Route.TextedRoma then Route.SetRoute(Roma)
     else if texted_trip then Route.SetRoute(Trip);
     Result := True;
 end;
@@ -1564,12 +1562,12 @@ begin
         end;//case end
     end;//while end
     writeln('По пути ты встречаешь каких-то гопников, курящих у трансформаторной будки.');
-    if Route.RomaEvent then writeln('Ты не сразу узнаёшь в них друзей Ромы с района.')
+    if Route.TextedRoma then writeln('Ты не сразу узнаёшь в них друзей Ромы с района.')
     else writeln('Они похожи на парней, с которыми часто тусуется один твой друг, Рома.');
     Dialogue.Say(anon, 'О, Шобунен, ты, что ли?');
     Dialogue.Say(Саня, 'Э... Привет, чё как?');
     Dialogue.Say(anon, 'Норм. Чё, идёшь на парковку?');
-    if Route.RomaEvent then
+    if Route.TextedRoma then
     begin
         Dialogue.Say(Саня, 'Ага. Вы тоже туда на тусу?');
         Dialogue.Say(anon,
@@ -1605,7 +1603,7 @@ begin
             begin
                 
             end;
-        Roma, RomaOrTrip:
+        Roma:
             begin
                 
             end;
@@ -1707,36 +1705,38 @@ end;
 
 {$ENDREGION}
 
-{$REGION сцены}
+{$REGION ключевые_сцены}
 var
-    Scene5 := new FinalScene(() -> begin end, 'финал');
-    Scene4 := new PlayableScene(PART4, 'драка с костылём', Scene5);
-    Scene3 := new Cutscene(PART3, 'диалог с ребятами', Scene4);
-    Scene2 := new PlayableScene(PART2, 'подъезд', Scene3);
-    Scene1 := new PlayableScene(PART1, 'квартира', Scene2);
+  
+    sFork := new PlayableScene(PART4, 'драка с костылём');
+    
+    sStart := (new PlayableScene(PART1, 'комната')).Linkup(
+    new PlayableScene(PART2, 'подъезд'),
+    new Cutscene(PART3, 'выход на улицу'),
+    sFork);
+
 {$ENDREGION}
 
 {$REGION main}
 function GAMELOOP: boolean;
 var
-    CUR_PART: Scene;
+    current_scene: Scene;
 begin
     Result := False;
     Inventory.Reset;
     Route.SetRoute(Solo);
-    CUR_PART := Scene1;
+    current_scene := sStart;
     repeat
-        if (CUR_PART is Scenes.PlayableScene) then
+        if (current_scene is Scenes.PlayableScene) then
         // части с возможностью геймовера:
         begin
-            _Log.Log('=== часть: ' + CUR_PART.ToString);
-            _Log.Log('=== след.: ' + CUR_PART.ToString);
+            _Log.Log('=== часть: ' + current_scene.name);
             Inventory.Save;
-            var PASSED: boolean;
+            var passed: boolean;
             repeat
                 Inventory.Load;
-                PASSED := (CUR_PART as PlayableScene).Passed;
-                if PASSED then break else
+                passed := (current_scene as PlayableScene).Passed;
+                if passed then break else
                 begin
                     achGameOver.Achieve;
                     _Log.Log('=== геймовер');
@@ -1753,6 +1753,7 @@ begin
                     Cursor.GoTop(-1);
                     if YN then
                     begin
+                        _Log.Log('= ОТКАТ');
                         writeln;
                         WriteEqualsLine;
                         Anim.Next3;
@@ -1776,12 +1777,20 @@ begin
             Anim.Next1;
             writelnx2;
             Console.Beep;
-            _Log.Log('=== чекпоинт: ' + CUR_PART.ToString);
+            _Log.Log('=== чекпоинт: ' + current_scene.name);
         end
         // части просто проходимые без геймоверов:
-        else (CUR_PART as Cutscene).Run;
-        CUR_PART := CUR_PART.next;
-    until (CUR_PART = nil);
+        else (current_scene as Cutscene).Run;
+        current_scene := current_scene.next;
+        //        if (current_scene = sFork) then
+        //            case Route.GetRoute of
+        //                {-} route_enum.Solo: current_scene := sSoloStart;
+        //                {-} route_enum.Rita: current_scene := sRitaStart;
+        //                {-} route_enum.Trip: current_scene := sTripStart;
+        //                {-} route_enum.Solo: current_scene := sRomaStart;
+        //            end; // case end
+        // todo раскомментить когда будут руты
+    until (current_scene = nil);
     TxtClr(Color.Cyan);
     writeln('<=== TO BE CONTINUED...');
     writeln;
@@ -1800,7 +1809,7 @@ begin
     writeln('Конец демо-версии. Перезапустить? (Y/N)');
     if YN then
     begin
-        _Log.Log('=== РЕСТАРТ');
+        _Log.Log('=== ФУЛЛ РЕСТАРТ');
         
         ClrScr;
         TxtClr(Color.Green);
@@ -1840,10 +1849,10 @@ begin
             WHATSNEW;
             {$ENDIF}
             
-            var res: boolean;
+            var ended_game: boolean;
             repeat
-                res := GAMELOOP;
-            until res;
+                ended_game := GAMELOOP;
+            until ended_game;
         
         // отсюда идём в try...finally
         except
