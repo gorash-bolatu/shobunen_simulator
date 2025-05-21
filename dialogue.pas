@@ -1,4 +1,5 @@
-﻿unit Dialogue;
+﻿{$DEFINE DOOBUG} // todo
+unit Dialogue;
 
 interface
 

@@ -1,4 +1,5 @@
-﻿unit Menu;
+﻿{$DEFINE DOOBUG} // todo
+unit Menu;
 
 interface
 

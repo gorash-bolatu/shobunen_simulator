@@ -1,4 +1,5 @@
-﻿unit Procs;
+﻿{$DEFINE DOOBUG} // todo
+unit Procs;
 
 interface
 

@@ -1,4 +1,5 @@
-﻿unit SlashingMinigame;
+﻿{$DEFINE DOOBUG} // todo
+unit SlashingMinigame;
 
 interface
 
