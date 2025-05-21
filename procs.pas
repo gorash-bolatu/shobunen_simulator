@@ -76,7 +76,7 @@ procedure STOP(interact: boolean);
 
 implementation
 
-uses Cursor, MyTimers, Inventory, Parser, Anim, Achievements, Menu, EscapeRooms;
+uses Cursor, MyTimers, Inventory, Parser, Anim, Achievements, Menu, EscapeRooms, Scenes;
 uses _Log;
 
 var
@@ -329,8 +329,6 @@ begin
     UPD_SCR_TMR.Enable;
     UpdScr;
     Randomize;
-    Achievements.HashSetOfAll.TrimExcess;
-    EscapeRooms.ListOfAll.TrimExcess;
 end;
 
 procedure STOP(interact: boolean);
@@ -354,12 +352,11 @@ begin
         UPD_SCR_TMR := nil;
     end;
     _Log.Cleanup;
-    Achievements.DestroyAll;
-    Achievements.HashSetOfAll := nil;
+    Achievements.Cleanup;
     Inventory.Cleanup;
     Menu.Cleanup;
-    EscapeRooms.DestroyAll;
-    EscapeRooms.ListOfAll := nil;
+    EscapeRooms.Cleanup;
+    Scenes.Cleanup;
     CMDRES := nil;
     MENURES := nil;
     CollectGarbage;

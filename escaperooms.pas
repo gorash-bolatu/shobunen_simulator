@@ -11,16 +11,16 @@ type
         constructor Create(proc: procedure);
     end;// class end
 
-var
-  ListOfAll: List<EscapeRoom> := new List<EscapeRoom>;
-
-procedure DestroyAll;
+procedure Cleanup;
 
 
 
 implementation
 
 uses Procs, Anim;
+
+var
+  ListOfAll: List<EscapeRoom> := new List<EscapeRoom>;
 
 constructor EscapeRoom.Create(proc: procedure);
 begin
@@ -46,10 +46,9 @@ begin
     Anim.Next3;
 end;
 
-procedure DestroyAll;
+procedure Cleanup;
 begin
     if (ListOfAll = nil) then exit;
-    for var i: integer := 0 to (ListOfAll.Count - 1) do ListOfAll[i] := nil;
     ListOfAll.Clear;
     ListOfAll := nil;
 end;
