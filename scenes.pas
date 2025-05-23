@@ -3,14 +3,18 @@
 interface
 
 type
+
     Scene = abstract class
+    private
+        id: integer;
+        constructor Create(scenename: string);
     protected
-        constructor Create(name: string; next: Scene);
         destructor Destroy;
     public
         name: string;
         next: Scene;
         function Linkup(params scenes: array of Scene): Scene;
+        function ToString: string; override := $'[{self.id}] {self.name}';
     end;// class end
     
     Cutscene = class(Scene)
@@ -38,10 +42,11 @@ implementation
 var
     ListOfAll: List<Scene> := new List<Scene>;
 
-constructor Scene.Create(name: string; next: Scene);
+constructor Scene.Create(scenename: string);
 begin
-    self.name := name;
-    self.next := next;
+    self.id := (ListOfAll.Count = 0) ? 0 : (ListOfAll.Last.id + 1);
+    self.name := scenename;
+    self.next := nil;
     ListOfAll.Add(self);
 end;
 
@@ -61,13 +66,13 @@ end;
 
 constructor Cutscene.Create(proc: procedure; name: string);
 begin
-    inherited Create(name, nil);
+    inherited Create(name);
     self.proc := proc;
 end;
 
 constructor PlayableScene.Create(func: function: boolean; name: string);
 begin
-    inherited Create(name, nil);
+    inherited Create(name);
     self.func := func;
 end;
 
