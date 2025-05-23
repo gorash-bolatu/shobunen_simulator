@@ -10,7 +10,7 @@ program shobu_sim;
 {$REFERENCE System.Windows.Forms.dll}
 
 uses Cursor, MyTimers, Procs, Achievements, Inventory, Tutorial, Draw, Anim, Chat, Menu,
-    TextToSpeech, Dialogue, SlashingMinigame, ButtonMashMinigames, EscapeRooms, Scenes;
+    TextToSpeech, Dialogue, SlashingMinigame, ButtonMashMinigames, Scenes;
 uses _Log;
 
 {$DEFINE DOOBUG} // todo
@@ -117,128 +117,25 @@ var
     'В комнате Шобунена порыться в ящике - там будет жёсткий диск. Найти зарядку от ноутбука, зарядить и включить его, подключить диск и узнать, насколько глубока кроличья нора...');
 {$ENDREGION}
 
-    {$REGION комнаты_побега}
+{$ENDREGION}
 
-procedure ElevatorProc;
+procedure EscapeRoom(proc: procedure);
 begin
-    var tried_emergency_button, opened_hatch: boolean;
-    writeln('Из-за пропавшего света тебе придётся действовать вслепую.');
-    writeln('Не видел ли ты в этом лифте что-то, что может помочь выбраться?');
-    if not Tutorial.ElevatorH.Shown then writeln('Что если попробовать сломать эту штуку...');
-    while True do
-    begin// while begin
-        CMDRES := ReadCmd;
-        case CMDRES of
-            {-}'CHECK', 'GET':
-                if opened_hatch then writeln('Возможно, стоит подняться наверх?')
-                else if Inventory.Has(itShard) then
-                    writeln('Люк на потолке... Можно попытаться открыть его осколком стекла!')
-                else writeln('Точно, зеркало! Вдруг с ним что-то можно сделать?..');
-            {-}'GET_DOG': writeln('Юпитер и так с тобой!');
-            {-}'CALL', 'PRESS', 'CALL_PRESS', 'PRESS_CALL':
-                if tried_emergency_button then writeln('Никто не отвечает, сколько ты не жал бы на кнопку.')
-                else begin
-                    if CMDRES = 'PRESS' then writeln('Ты пытаешься понажимать какие-нибудь кнопки. Ничего не работает...');
-                    writeln('Ты нащупываешь кнопку связи с диспетчером и жмёшь её.');
-                    writeln('Через несколько минут тебе наконец отвечает какая-то сварливая тётка.');
-                    writeln('Она мерзким голосом объявляет, что сегодня лифтёры не приедут.');
-                    writeln('На твоё мямленье она раздражённо говорит выбираться самостоятельно.');
-                    writeln('После этого никто не отвечает, сколько ты бы не жал на кнопку.');
-                    tried_emergency_button := True;
-                end;
-            {-}'JUMP', 'BREAK', 'JUMP_LIFT', 'BREAK_LIFT':
-            writeln('Ты прыгаешь в лифте несколько раз, но он никуда не двигается.');
-            {-}'BREAK_DOORS': writeln('Двери не поддаются!');
-            {-}'KISS_MIRROR':
-                begin
-                    writeln('Ты... э... целуешь зеркало.');
-                    writeln('Похоже, это нисколько не помогает тебе выбраться из лифта.');
-                end;
-            {-}'TAKEOFF_MIRROR', 'BREAK_DOG', 'BREAK_MIRROR', 'BREAK_MIRROR_DOG', 'BREAK_DOG_MIRROR', 'CUT_MIRROR',
-            'THROW_DOG', 'THROW_MIRROR', 'THROW_MIRROR_DOG', 'THROW_DOG_MIRROR', 'GET_DOG_BREAK_MIRROR', 'GET_MIRROR',
-            'BREAK_MIRROR_BOTTLE', 'BREAK_BOTTLE_MIRROR', 'THROW_MIRROR_BOTTLE', 'THROW_BOTTLE_MIRROR',
-            'BREAK_MIRROR_COLA', 'BREAK_COLA_MIRROR', 'THROW_MIRROR_COLA', 'THROW_COLA_MIRROR',
-            'BREAK_MIRROR_BOTTLE_COLA', 'BREAK_BOTTLE_COLA_MIRROR', 'THROW_MIRROR_BOTTLE_COLA', 'THROW_BOTTLE_COLA_MIRROR',
-            'BREAK_MIRROR_COLA_BOTTLE', 'BREAK_COLA_BOTTLE_MIRROR', 'THROW_MIRROR_COLA_BOTTLE', 'THROW_COLA_BOTTLE_MIRROR',
-            'THROW_COLA', 'THROW_BOTTLE', 'THROW_COLA_BOTTLE', 'THROW_BOTTLE_COLA', 'GET_DOG_THROW_MIRROR':
-                if Inventory.Has(itShard) then writeln('Ты уже сломал зеркало.')
-                else begin
-                    if CMDRES.IsMatch('^TAKEOFF|GET_M') then
-                    begin
-                        writeln('Ты пытаешься снять зеркало со стены, но оно наглухо прикручено.');
-                        writeln('Пытаясь оторвать, ты трясешь его... и так сильно, что оно лопается!');
-                    end
-                    else if CMDRES.Contains('DOG') then
-                    begin
-                        writeln('Ты хватаешь Юпитера и со всей силы кидаешь его в зеркало.');
-                        writeln('Оно с треском разбивается, а собака громко взвизгивает и падает на пол!');
-                    end
-                    else if CMDRES.IsMatch('COLA|BOTTLE') then
-                        if Inventory.Has(itCola) then println('Ты бросаешь бутылку с колой прямо в зеркало, и оно разбивается.')
-                        else begin
-                            writeln('Так не пойдёт. Нужно попробовать что-нибудь ещё.');
-                            Tutorial.ShowCheckHint;
-                            continue
-                        end
-                    else writeln('Ты вмазываешь по зеркалу со всей силы и разбиваешь его.');
-                    writeln('С пола ты поднимаешь осколок стекла.');
-                    Inventory.Obtain(itShard);
-                end;
-            {-}'GO', 'GO_LIFT', 'GOUP', 'GOUP_LIFT', 'GO_HATCH', 'GOUP_HATCH', 'GO_HATCH_LIFT', 'GOUP_HATCH_LIFT',
-            'GO_LIFT_HATCH', 'GOUP_LIFT_HATCH', 'CHECK_HATCH', 'GET_HATCH':
-                if opened_hatch then
-                begin
-                    writeln('Ты с трудом взбираешься через люк наверх.');
-                    writeln('Повезло - прямо перед тобой находится дверь на этаж!');
-                    writeln('Но придётся потрудиться, чтобы её открыть...');
-                    Anim.Next3;
-                    ButtonMashMinigames.DoorBreaking;
-                    break;
-                end
-                else begin
-                    writeln('Ты находишь на потолке аварийный люк и пытаешься его открыть.');
-                    writeln('Это не так просто - он чем-то закреплён.');
-                    writeln('Если б только эти крепления можно было чем-то подрезать...');
-                end;
-            {-}'BREAK_HATCH':
-                if opened_hatch then writeln('Ты уже открыл люк') else
-                begin
-                    writeln('Ты ударяешь по люку на потолке, но крепления не поддаются.');
-                    writeln('Если б только их можно было чем-то подрезать...');
-                end;
-            {-}'OPEN_HATCH', 'CUT_HATCH', 'OPEN_ATTACH', 'BREAK_ATTACH', 'CUT_ATTACH', 'CHECK_ATTACH',
-            'OPEN_ATTACH_HATCH', 'BREAK_ATTACH_HATCH', 'CUT_ATTACH_HATCH', 'CHECK_ATTACH_HATCH',
-            'OPEN_HATCH_ATTACH', 'BREAK_HATCH_ATTACH', 'CUT_HATCH_ATTACH', 'CHECK_HATCH_ATTACH':
-                if opened_hatch then writeln('Ты уже открыл люк.')
-                else if Inventory.Has(itShard) then begin
-                    writeln('Ты подрезаешь крепления осколком стекла.');
-                    writeln('Ха! Это было как-то... даже слишком просто.');
-                    opened_hatch := True;
-                    writeln('Теперь можно взобраться сквозь люк на верх лифта.');
-                end
-                else begin
-                    writeln('Ты находишь на потолке аварийный люк и пытаешься его открыть.');
-                    writeln('Это не так просто - он чем-то закреплён.');
-                    writeln('Если б только эти крепления можно было чем-то подрезать...');
-                end
-        else // case else
-            begin
-                writeln('Так не пойдёт. Нужно попробовать что-нибудь ещё.');
-                if not Tutorial.ElevatorH.Shown then
-                begin
-                    Tutorial.Comment('в случае затупа можно использовать команду "осмотреться"');
-                    Tutorial.ElevatorH.Show;
-                end;
-            end;
-        end; // case end
-    end; // while end
+    Anim.Next3;
+    TxtClr(Color.Yellow);
+    writeln('=== SEEK A WAY OUT! ===');
+    writeln;
+    BeepWait(580, 230);
+    BeepWait(460, 230);
+    BeepWait(280, 230);
+    BeepWait(300, 380);
+    TxtClr(Color.White);
+    proc();
+    TxtClr(Color.Yellow);
+    writeln('=== YOU FOUND IT ===');
+    BeepWait(300, 200);
+    Anim.Next3;
 end;
-
-var
-    Elevator: EscapeRoom := new EscapeRoom(ElevatorProc);
-{$ENDREGION}
-
-{$ENDREGION}
 
 {$REGION сюжет}
 
@@ -1498,16 +1395,128 @@ begin
 end;
 {$ENDREGION}
 
-{$ENDREGION}
+    {$ENDREGION}
 
     {$REGION 2. КОРИДОР}
-function PART2: boolean;
-var
-    second_floor: boolean;
+procedure Elevator;
+begin
+    var tried_emergency_button, opened_hatch: boolean;
+    writeln('Из-за пропавшего света тебе придётся действовать вслепую.');
+    writeln('Не видел ли ты в этом лифте что-то, что может помочь выбраться?');
+    if not Tutorial.ElevatorH.Shown then writeln('Что если попробовать сломать эту штуку...');
+    while True do
+    begin// while begin
+        CMDRES := ReadCmd;
+        case CMDRES of
+            {-}'CHECK', 'GET':
+                if opened_hatch then writeln('Возможно, стоит подняться наверх?')
+                else if Inventory.Has(itShard) then
+                    writeln('Люк на потолке... Можно попытаться открыть его осколком стекла!')
+                else writeln('Точно, зеркало! Вдруг с ним что-то можно сделать?..');
+            {-}'GET_DOG': writeln('Юпитер и так с тобой!');
+            {-}'CALL', 'PRESS', 'CALL_PRESS', 'PRESS_CALL':
+                if tried_emergency_button then writeln('Никто не отвечает, сколько ты не жал бы на кнопку.')
+                else begin
+                    if CMDRES = 'PRESS' then writeln('Ты пытаешься понажимать какие-нибудь кнопки. Ничего не работает...');
+                    writeln('Ты нащупываешь кнопку связи с диспетчером и жмёшь её.');
+                    writeln('Через несколько минут тебе наконец отвечает какая-то сварливая тётка.');
+                    writeln('Она мерзким голосом объявляет, что сегодня лифтёры не приедут.');
+                    writeln('На твоё мямленье она раздражённо говорит выбираться самостоятельно.');
+                    writeln('После этого никто не отвечает, сколько ты бы не жал на кнопку.');
+                    tried_emergency_button := True;
+                end;
+            {-}'JUMP', 'BREAK', 'JUMP_LIFT', 'BREAK_LIFT':
+            writeln('Ты прыгаешь в лифте несколько раз, но он никуда не двигается.');
+            {-}'BREAK_DOORS': writeln('Двери не поддаются!');
+            {-}'KISS_MIRROR':
+                begin
+                    writeln('Ты... э... целуешь зеркало.');
+                    writeln('Похоже, это нисколько не помогает тебе выбраться из лифта.');
+                end;
+            {-}'TAKEOFF_MIRROR', 'BREAK_DOG', 'BREAK_MIRROR', 'BREAK_MIRROR_DOG', 'BREAK_DOG_MIRROR', 'CUT_MIRROR',
+            'THROW_DOG', 'THROW_MIRROR', 'THROW_MIRROR_DOG', 'THROW_DOG_MIRROR', 'GET_DOG_BREAK_MIRROR', 'GET_MIRROR',
+            'BREAK_MIRROR_BOTTLE', 'BREAK_BOTTLE_MIRROR', 'THROW_MIRROR_BOTTLE', 'THROW_BOTTLE_MIRROR',
+            'BREAK_MIRROR_COLA', 'BREAK_COLA_MIRROR', 'THROW_MIRROR_COLA', 'THROW_COLA_MIRROR',
+            'BREAK_MIRROR_BOTTLE_COLA', 'BREAK_BOTTLE_COLA_MIRROR', 'THROW_MIRROR_BOTTLE_COLA', 'THROW_BOTTLE_COLA_MIRROR',
+            'BREAK_MIRROR_COLA_BOTTLE', 'BREAK_COLA_BOTTLE_MIRROR', 'THROW_MIRROR_COLA_BOTTLE', 'THROW_COLA_BOTTLE_MIRROR',
+            'THROW_COLA', 'THROW_BOTTLE', 'THROW_COLA_BOTTLE', 'THROW_BOTTLE_COLA', 'GET_DOG_THROW_MIRROR':
+                if Inventory.Has(itShard) then writeln('Ты уже сломал зеркало.')
+                else begin
+                    if CMDRES.IsMatch('^TAKEOFF|GET_M') then
+                    begin
+                        writeln('Ты пытаешься снять зеркало со стены, но оно наглухо прикручено.');
+                        writeln('Пытаясь оторвать, ты трясешь его... и так сильно, что оно лопается!');
+                    end
+                    else if CMDRES.Contains('DOG') then
+                    begin
+                        writeln('Ты хватаешь Юпитера и со всей силы кидаешь его в зеркало.');
+                        writeln('Оно с треском разбивается, а собака громко взвизгивает и падает на пол!');
+                    end
+                    else if CMDRES.IsMatch('COLA|BOTTLE') then
+                        if Inventory.Has(itCola) then println('Ты бросаешь бутылку с колой прямо в зеркало, и оно разбивается.')
+                        else begin
+                            writeln('Так не пойдёт. Нужно попробовать что-нибудь ещё.');
+                            Tutorial.ShowCheckHint;
+                            continue
+                        end
+                    else writeln('Ты вмазываешь по зеркалу со всей силы и разбиваешь его.');
+                    writeln('С пола ты поднимаешь осколок стекла.');
+                    Inventory.Obtain(itShard);
+                end;
+            {-}'GO', 'GO_LIFT', 'GOUP', 'GOUP_LIFT', 'GO_HATCH', 'GOUP_HATCH', 'GO_HATCH_LIFT', 'GOUP_HATCH_LIFT',
+            'GO_LIFT_HATCH', 'GOUP_LIFT_HATCH', 'CHECK_HATCH', 'GET_HATCH':
+                if opened_hatch then
+                begin
+                    writeln('Ты с трудом взбираешься через люк наверх.');
+                    writeln('Повезло - прямо перед тобой находится дверь на этаж!');
+                    writeln('Но придётся потрудиться, чтобы её открыть...');
+                    Anim.Next3;
+                    ButtonMashMinigames.DoorBreaking;
+                    break;
+                end
+                else begin
+                    writeln('Ты находишь на потолке аварийный люк и пытаешься его открыть.');
+                    writeln('Это не так просто - он чем-то закреплён.');
+                    writeln('Если б только эти крепления можно было чем-то подрезать...');
+                end;
+            {-}'BREAK_HATCH':
+                if opened_hatch then writeln('Ты уже открыл люк') else
+                begin
+                    writeln('Ты ударяешь по люку на потолке, но крепления не поддаются.');
+                    writeln('Если б только их можно было чем-то подрезать...');
+                end;
+            {-}'OPEN_HATCH', 'CUT_HATCH', 'OPEN_ATTACH', 'BREAK_ATTACH', 'CUT_ATTACH', 'CHECK_ATTACH',
+            'OPEN_ATTACH_HATCH', 'BREAK_ATTACH_HATCH', 'CUT_ATTACH_HATCH', 'CHECK_ATTACH_HATCH',
+            'OPEN_HATCH_ATTACH', 'BREAK_HATCH_ATTACH', 'CUT_HATCH_ATTACH', 'CHECK_HATCH_ATTACH':
+                if opened_hatch then writeln('Ты уже открыл люк.')
+                else if Inventory.Has(itShard) then begin
+                    writeln('Ты подрезаешь крепления осколком стекла.');
+                    writeln('Ха! Это было как-то... даже слишком просто.');
+                    opened_hatch := True;
+                    writeln('Теперь можно взобраться сквозь люк на верх лифта.');
+                end
+                else begin
+                    writeln('Ты находишь на потолке аварийный люк и пытаешься его открыть.');
+                    writeln('Это не так просто - он чем-то закреплён.');
+                    writeln('Если б только эти крепления можно было чем-то подрезать...');
+                end
+        else // case else
+            begin
+                writeln('Так не пойдёт. Нужно попробовать что-нибудь ещё.');
+                if not Tutorial.ElevatorH.Shown then
+                begin
+                    Tutorial.Comment('в случае затупа можно использовать команду "осмотреться"');
+                    Tutorial.ElevatorH.Show;
+                end;
+            end;
+        end; // case end
+    end; // while end
+end;
 
-{$REGION коридор}
+function PART2: boolean;
 begin
     Result := False;
+    var second_floor: boolean;
     TxtClr(Color.White);
     writeln('Чтобы выгулять Юпитера, нужно сначала попасть на улицу.');
     writeln('Перед тобой лестница, лифт и окно, в котором виднеется вечно серое Чертаново.');
@@ -1533,7 +1542,7 @@ begin
                     writeln('Лифт начинает спускаться на первый этаж, как вдруг...');
                     writeln('Вырубается свет, и с громким шумом и скрипом лифт останавливается!');
                     writeln('Юпитер недовольно гавкает. А лифт дальше ехать не собирается...');
-                    Elevator.Play;
+                    EscapeRoom(Elevator);
                     achEscapeMaster.Achieve;
                     TxtClr(Color.White);
                     writeln('Ты с Юпитером выбираешься из лифта в коридор второго этажа.');
@@ -1587,9 +1596,7 @@ begin
     // todo другой способ переключения рутов Соло и Риты?
     Result := True;
 end;
-{$ENDREGION}
-
-{$ENDREGION}
+    {$ENDREGION}
 
     {$REGION 3. ВЫХОД НА УЛИЦУ}
 procedure PART3;
@@ -1610,7 +1617,7 @@ begin
     else raise new Exception('НЕ ЗАДАН РУТ'); // case else
     end;//case route end
 end;
-{$ENDREGION}
+    {$ENDREGION}
 
     {$REGION 4. БИТВА С КОСТЫЛЕМ}
 function PART4: boolean;
@@ -1636,7 +1643,7 @@ begin
     
     Result := True;
 end;
-{$ENDREGION}
+    {$ENDREGION}
 
 {$ENDREGION}
 
@@ -1705,7 +1712,7 @@ end;
 
 {$ENDREGION}
 
-{$REGION ключевые_сцены}
+{$REGION сцены}
 var
     
     sFork := new PlayableScene(PART4, 'драка с костылём');
