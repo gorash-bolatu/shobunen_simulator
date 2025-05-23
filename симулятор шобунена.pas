@@ -1547,7 +1547,7 @@ begin
         if (current_scene is PlayableScene) then
         // части с возможностью геймовера:
         begin
-            _Log.Log('=== часть: ' + current_scene.ToString);
+            _Log.Log('=== часть: ' + current_scene.name);
             Inventory.Save;
             var passed: boolean;
             repeat
@@ -1594,7 +1594,7 @@ begin
             Anim.Next1;
             writelnx2;
             Console.Beep;
-            _Log.Log('=== чекпоинт: ' + current_scene.ToString);
+            _Log.Log('=== чекпоинт: ' + current_scene.name);
         end
         // части просто проходимые без геймоверов:
         else (current_scene as Cutscene).Run;

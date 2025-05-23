@@ -3,10 +3,9 @@
 interface
 
 type
-
+    
     Scene = abstract class
     private
-        id: integer;
         constructor Create(scenename: string);
     protected
         destructor Destroy;
@@ -14,7 +13,6 @@ type
         name: string;
         next: Scene;
         function Linkup(params scenes: array of Scene): Scene;
-        function ToString: string; override := $'[{self.id}] {self.name}';
     end;// class end
     
     Cutscene = class(Scene)
@@ -43,7 +41,6 @@ var
 
 constructor Scene.Create(scenename: string);
 begin
-    self.id := (ListOfAll.Count = 0) ? 0 : (ListOfAll.Last.id + 1);
     self.name := scenename;
     self.next := nil;
     ListOfAll.Add(self);

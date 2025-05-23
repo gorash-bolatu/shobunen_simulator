@@ -97,8 +97,8 @@ begin
         writeln('Ура! Ты получил все достижения в игре!');
         writeln;
     end;
-    DoWithoutUpdScr(() -> Anim.Next3());
     Cursor.GoTop(-1);
+    DoWithoutUpdScr(() -> Anim.Next3());
 end;
 
 initialization
