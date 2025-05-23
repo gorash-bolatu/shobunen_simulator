@@ -68,16 +68,13 @@ function FiftyFifty<T>(a, b: T): T;
 procedure CollectGarbage;
 /// ввод + парсинг команды
 function ReadCmd(prompt: string := ''): string;
-/// инициализация перед запуском программы
-procedure STARTUP(prog_name: string; prog_version: string := #8);
-/// полная остановка программы
-procedure STOP(interact: boolean);
-
+/// успешна ли инициализация перед запуском программы
+function STARTUP(prog_name: string; prog_version: string): boolean;
 
 
 implementation
 
-uses Cursor, MyTimers, Inventory, Parser, Anim, Achievements, Menu, EscapeRooms, Scenes;
+uses Cursor, MyTimers, Inventory, Parser, Anim;
 uses _Log;
 
 var
@@ -282,13 +279,15 @@ begin
     prompt := nil;
 end;
 
-procedure STARTUP(prog_name, prog_version: string);
+function STARTUP(prog_name, prog_version: string): boolean;
 begin
+    Result := False;
+    if NilOrEmpty(prog_version) then prog_version := #8;
     if Console.IsOutputRedirected then
     begin
         println('[', prog_name, prog_version, ']');
         writeln('Программа запущена не в консольном окне. Shift+F9?');
-        STOP(False);
+        exit;
     end;
     writeln('Загрузка...');
     if IsUnix then
@@ -297,7 +296,7 @@ begin
         writeln('Программа запущена не на операционной системе Windows.');
         TxtClr(Color.Cyan);
         writeln('Всё равно продолжить? (Y/N)');
-        if not YN then STOP(False);
+        if not YN then exit;
         _Log.WarnedUnix := True;
     end;
     BgClr(Color.Black);
@@ -311,7 +310,7 @@ begin
     begin
         TxtClr(Color.Cyan);
         writeln('This program is available only in Russian. Continue anyway? (Y/N)');
-        if not YN then STOP(False);
+        if not YN then exit;
         _Log.WarnedLanguage := True;
     end;
     if (Console.LargestWindowWidth <= MIN_WIDTH) then
@@ -330,38 +329,25 @@ begin
     UPD_SCR_TMR.Enable;
     UpdScr;
     Randomize;
+    Result := True;
 end;
 
-procedure STOP(interact: boolean);
+procedure Cleanup;
 begin
-    if interact then
-    begin
-        writeln;
-        {$IFNDEF DOOBUG}
-        TxtClr(Color.Cyan);
-        writeln('Программа завершена, нажмите любую клавишу...');
-        Cursor.Show;
-        ClrKeyBuffer;
-        ReadKey;
-        _Log.Log('=== выход');
-        {$ENDIF}
-    end;
     if not Console.IsOutputRedirected then _Log.Log('=== стоп');
     if (UPD_SCR_TMR <> nil) then
     begin
         UPD_SCR_TMR.Destroy;
         UPD_SCR_TMR := nil;
     end;
-    _Log.Cleanup;
-    Achievements.Cleanup;
-    Inventory.Cleanup;
-    Menu.Cleanup;
-    EscapeRooms.Cleanup;
-    Scenes.Cleanup;
     CMDRES := nil;
     MENURES := nil;
     CollectGarbage;
-    Halt(0);
 end;
+
+initialization
+
+finalization
+    Cleanup;
 
 end.
