@@ -1544,7 +1544,7 @@ begin
     Route.SetRoute(Solo);
     current_scene := sStart;
     repeat
-        if (current_scene is Scenes.PlayableScene) then
+        if (current_scene is PlayableScene) then
         // части с возможностью геймовера:
         begin
             _Log.Log('=== часть: ' + current_scene.ToString);

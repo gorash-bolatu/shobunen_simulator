@@ -42,17 +42,12 @@ begin
     end;
 end;
 
-procedure Cleanup;
-begin
+initialization
+
+finalization
     if (ListOfAll = nil) then exit;
     foreach i: Timer in ListOfAll do i.Destroy;
     ListOfAll.Clear;
     ListOfAll := nil;
-end;
-
-initialization
-
-finalization
-    Cleanup;
 
 end.

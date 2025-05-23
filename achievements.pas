@@ -15,11 +15,10 @@ type
 
 procedure DisplayAll;
 function DebugString: string;
-procedure Cleanup;
 
 implementation
 
-uses Cursor, Procs;
+uses Cursor, Procs, Anim;
 
 var
     ListOfAll: List<Achievement> := new List<Achievement>;
@@ -63,6 +62,7 @@ begin
             writeln(TAB, '} ', ach.fName);
             TxtClr(Color.DarkCyan);
             writeln(TAB, '- ', ach.fDesc);
+            sleep(300);
         end;
         writeln;
         TxtClr(Color.Green);
@@ -88,29 +88,25 @@ begin
                     var w: integer := MIN_WIDTH - Cursor.Left;
                     writeln(WordWrap(ach.fWalkthrough, w, NewLine + TAB));
                 end;
+                sleep(300);
             end;
             writeln;
-            ReadKey;
         end;
     end
     else begin
         writeln('Ура! Ты получил все достижения в игре!');
         writeln;
-        ReadKey;
     end;
-end;
-
-procedure Cleanup;
-begin
-    if (ListOfAll = nil) then exit;
-    foreach i: Achievement in ListOfAll do i.Destroy;
-    ListOfAll.Clear;
-    ListOfAll := nil;
+    DoWithoutUpdScr(() -> Anim.Next3());
+    Cursor.GoTop(-1);
 end;
 
 initialization
 
 finalization
-    Cleanup;
+    if (ListOfAll = nil) then exit;
+    foreach i: Achievement in ListOfAll do i.Destroy;
+    ListOfAll.Clear;
+    ListOfAll := nil;
 
 end.

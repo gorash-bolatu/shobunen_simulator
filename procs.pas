@@ -341,19 +341,6 @@ begin
     Result := True;
 end;
 
-procedure Cleanup;
-begin
-    if not Console.IsOutputRedirected then _Log.Log('=== стоп');
-    if (UPD_SCR_TMR <> nil) then
-    begin
-        UPD_SCR_TMR.Destroy;
-        UPD_SCR_TMR := nil;
-    end;
-    CMDRES := nil;
-    MENURES := nil;
-    CollectGarbage;
-end;
-
 procedure Puke(ex: Exception);
 begin
     _Log.Log('!! ОШИБКА:');
@@ -421,6 +408,14 @@ end;
 initialization
 
 finalization
-    Cleanup;
+    if not Console.IsOutputRedirected then _Log.Log('=== стоп');
+    if (UPD_SCR_TMR <> nil) then
+    begin
+        UPD_SCR_TMR.Destroy;
+        UPD_SCR_TMR := nil;
+    end;
+    CMDRES := nil;
+    MENURES := nil;
+    CollectGarbage;
 
 end.

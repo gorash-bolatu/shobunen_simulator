@@ -10,7 +10,6 @@ type
 procedure Save;
 procedure Load;
 procedure Reset;
-procedure Cleanup;
 function IsEmpty: boolean;
 function Count: integer;
 function Has(const it: Item): boolean;
@@ -35,20 +34,6 @@ procedure Save() := if (activeList <> nil) then savedList := new List<Item>(acti
 procedure Load() := if (savedList <> nil) then activeList := new List<Item>(savedList);
 
 procedure Reset() := if (activeList <> nil) then activeList.Clear;
-
-procedure Cleanup;
-begin
-    if (activeList <> nil) then
-    begin
-        activeList.Clear;
-        activeList := nil;
-    end;
-    if (savedList <> nil) then
-    begin
-        savedList.Clear;
-        savedList := nil;
-    end
-end;
 
 function IsEmpty: boolean := (activeList.Count = 0);
 
@@ -104,6 +89,15 @@ end;
 initialization
 
 finalization
-    Cleanup;
+    if (activeList <> nil) then
+    begin
+        activeList.Clear;
+        activeList := nil;
+    end;
+    if (savedList <> nil) then
+    begin
+        savedList.Clear;
+        savedList := nil;
+    end;
 
 end.

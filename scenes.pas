@@ -32,10 +32,9 @@ type
         constructor Create(func: function: boolean; name: string);
         function Passed: boolean := self.func();
     end;//class end
-
 // type end
 
-procedure Cleanup;
+
 
 implementation
 
@@ -76,17 +75,12 @@ begin
     self.func := func;
 end;
 
-procedure Cleanup;
-begin
+initialization
+
+finalization
     if (ListOfAll = nil) then exit;
     foreach i: Scene in ListOfAll do i.Destroy;
     ListOfAll.Clear;
     ListOfAll := nil;
-end;
-
-initialization
-
-finalization
-    Cleanup;
 
 end.

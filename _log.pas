@@ -288,18 +288,13 @@ begin
     writeln;
 end;
 
-procedure Cleanup;
-begin
+initialization
+
+finalization
     TryClose;
     CharList.Clear;
     CharList := nil;
     Val.Clear;
     Val := nil;
-end;
-
-initialization
-
-finalization
-    Cleanup;
 
 end.
