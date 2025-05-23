@@ -19,8 +19,8 @@ uses _Log;
 
 {$REGION глобальные_константы}
 const
-    VERSION: string = 'Alpha v2'; // todo
-    VERSION_nth: string = 'четырнадцатая';// todo
+    VERSION: string = 'Alpha v3'; // todo
+    VERSION_nth: string = 'пятнадцатая';// todo
 {$ENDREGION}
 
 {$REGION руты}
@@ -1668,6 +1668,7 @@ begin
     repeat
         ended_game := GAMELOOP;
     until ended_game;
+    writeln;
 end;
 {$ENDREGION}
 

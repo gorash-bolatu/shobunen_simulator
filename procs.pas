@@ -409,6 +409,7 @@ initialization
 
 finalization
     if not Console.IsOutputRedirected then _Log.Log('=== стоп');
+    _Log.Cleanup;
     if (UPD_SCR_TMR <> nil) then
     begin
         UPD_SCR_TMR.Destroy;

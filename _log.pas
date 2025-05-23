@@ -6,6 +6,7 @@ procedure Init(version: string; debug: boolean);
 procedure Log(const strg: string);
 procedure PushKey(k: System.ConsoleKey);
 procedure DumpThmera;
+procedure Cleanup;
 
 var
     mInputs, mTime: int64;
@@ -288,13 +289,13 @@ begin
     writeln;
 end;
 
-initialization
-
-finalization
+procedure Cleanup;
+begin
     TryClose;
     CharList.Clear;
     CharList := nil;
     Val.Clear;
     Val := nil;
+end;
 
 end.
