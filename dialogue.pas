@@ -223,4 +223,9 @@ begin
     writelnx2;
 end;
 
+initialization
+
+finalization
+    BulletTimeCaught := nil;
+
 end.

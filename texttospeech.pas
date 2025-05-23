@@ -147,4 +147,9 @@ begin
     end;
 end;
 
+initialization
+
+finalization
+    Dispose;
+
 end.

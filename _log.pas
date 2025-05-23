@@ -4,7 +4,6 @@ interface
 
 procedure Init(version: string; debug: boolean);
 procedure Log(const strg: string);
-procedure Cleanup;
 procedure PushKey(k: System.ConsoleKey);
 procedure DumpThmera;
 
@@ -294,7 +293,13 @@ begin
     TryClose;
     CharList.Clear;
     CharList := nil;
+    Val.Clear;
     Val := nil;
 end;
+
+initialization
+
+finalization
+    Cleanup;
 
 end.
