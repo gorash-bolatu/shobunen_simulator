@@ -55,7 +55,7 @@ begin
         if (progress > 0) and (ElapsedMS > period) then
         begin
             period := ElapsedMS;
-            period := period + 65 - (progress * 3);
+            period += 65 - (progress * 2);
             period += ((ElapsedMS - starttime) div 320); // система помощи если долго тупить
             progress -= 1;
         end;
