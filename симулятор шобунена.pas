@@ -1730,7 +1730,7 @@ begin
         if (current_scene is Scenes.PlayableScene) then
         // части с возможностью геймовера:
         begin
-            _Log.Log('=== часть: ' + current_scene.name);
+            _Log.Log('=== часть: ' + current_scene.ToString);
             Inventory.Save;
             var passed: boolean;
             repeat
@@ -1777,7 +1777,7 @@ begin
             Anim.Next1;
             writelnx2;
             Console.Beep;
-            _Log.Log('=== чекпоинт: ' + current_scene.name);
+            _Log.Log('=== чекпоинт: ' + current_scene.ToString);
         end
         // части просто проходимые без геймоверов:
         else (current_scene as Cutscene).Run;
@@ -1826,61 +1826,37 @@ end;
 
 procedure MAIN;
 begin
-    try
-        
-        if not STARTUP('СИМУЛЯТОР ШОБУНЕНА', VERSION) then exit;
-        {$IFDEF DOOBUG}
-        writeln('DEBUG MODE');
-        Console.Title += ' [DEBUG MODE]';
-        WriteEqualsLine;
-        Chat.Skip := True;
-        {$ELSE}
-        TITLESCREEN;
-        {$ENDIF}
-        
-        _Log.Init(VERSION, {$IFDEF DOOBUG} True {$ELSE} False {$ENDIF});
-        
-        {$IFNDEF DOOBUG}
-        WHATSNEW;
-        {$ENDIF}
-        
-        var ended_game: boolean;
-        repeat
-            ended_game := GAMELOOP;
-        until ended_game;
+    if not STARTUP('СИМУЛЯТОР ШОБУНЕНА', VERSION) then exit;
+    {$IFDEF DOOBUG}
+    writeln('DEBUG MODE');
+    Console.Title += ' [DEBUG MODE]';
+    WriteEqualsLine;
+    Chat.Skip := True;
+    {$ELSE}
+    TITLESCREEN;
+    {$ENDIF}
     
-        // отсюда идём в try...finally
-    except
-        on ___EX___: Exception do
-        begin
-            _Log.Log('!! ОШИБКА:');
-            _Log.Log(TAB + ___EX___.ToString);
-            if Console.IsOutputRedirected then writeln(___EX___.ToString)
-            else begin
-                BgClr(Color.Black);
-                ClrScr;
-                TxtClr(Color.Cyan);
-                writeln(#7);
-                writeln('// Ой! Произошла ошибка.');
-                writeln('// Свяжитесь с разработчиком и предоставьте следующее сообщение:');
-                TxtClr(Color.Red);
-                writeln;
-                writeln(___EX___.GetType);
-                writeln(___EX___.Message);
-                writeln(___EX___.StackTrace);
-                TxtClr(Color.DarkRed);
-                _Log.DumpThmera;
-                Cursor.Show;
-                sleep(1000);
-                Anim.Next3;
-            end;
-            ___EX___ := nil;
-        end;
-    end;// try except end
+    {$IFDEF DOOBUG}
+    _Log.Init(VERSION, True);
+    {$ELSE}
+    _Log.Init(VERSION, False);
+    {$ENDIF}
     
+    {$IFNDEF DOOBUG}
+    WHATSNEW;
+    {$ENDIF}
+    
+    var ended_game: boolean;
+    repeat
+        ended_game := GAMELOOP;
+    until ended_game;
 end;
 {$ENDREGION}
 
 begin
-    MAIN();
+    try
+        MAIN();
+    except
+        on _ex_: Exception do Puke(_ex_);
+    end;
 end.

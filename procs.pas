@@ -68,6 +68,8 @@ function FiftyFifty<T>(a, b: T): T;
 procedure CollectGarbage;
 /// ввод + парсинг команды
 function ReadCmd(prompt: string := ''): string;
+/// обработчик исключений
+procedure Puke(ex: Exception);
 /// успешна ли инициализация перед запуском программы
 function STARTUP(prog_name: string; prog_version: string): boolean;
 
@@ -343,6 +345,32 @@ begin
     CMDRES := nil;
     MENURES := nil;
     CollectGarbage;
+end;
+
+procedure Puke(ex: Exception);
+begin
+    _Log.Log('!! ОШИБКА:');
+    _Log.Log(TAB + ex.ToString);
+    if Console.IsOutputRedirected then writeln(ex.ToString)
+    else begin
+        BgClr(Color.Black);
+        ClrScr;
+        TxtClr(Color.Cyan);
+        writeln(#7);
+        writeln('// Ой! Произошла ошибка.');
+        writeln('// Свяжитесь с разработчиком и предоставьте следующее сообщение:');
+        TxtClr(Color.Red);
+        writeln;
+        writeln(ex.GetType);
+        writeln(ex.Message);
+        writeln(ex.StackTrace);
+        TxtClr(Color.DarkRed);
+        _Log.DumpThmera;
+        Cursor.Show;
+        sleep(1000);
+        Anim.Next3;
+    end;
+    ex := nil;
 end;
 
 initialization
