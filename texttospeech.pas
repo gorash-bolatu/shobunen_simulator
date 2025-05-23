@@ -49,7 +49,7 @@ begin
             synth.Dispose;
             synth := nil;
         except
-                    {ignore}
+        {ignore}
         end;
     DO_TTS := False;
 end;

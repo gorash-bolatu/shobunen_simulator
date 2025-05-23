@@ -44,6 +44,7 @@ function ElapsedMS: longword;
 procedure UpdScr;
 /// вычислить значение функции f с временно отключенной перерисовкой экрана
 function ComputeWithoutUpdScr<T>(f: () -> T): T;
+procedure DoWithoutUpdScr(p: () -> ());
 /// очистка строки
 procedure ClearLine(previous_line: boolean);
 /// очистка нескольких строк подряд
@@ -70,6 +71,8 @@ function FiftyFifty<T>(a, b: T): T;
 procedure CollectGarbage;
 /// ввод + парсинг команды
 function ReadCmd(prompt: string := ''): string;
+/// получить строку текста из встроенного файла ресурсов
+function TextFromResourceFile(resname: string): string; 
 /// обработчик исключений
 procedure Puke(ex: Exception);
 /// успешна ли инициализация перед запуском программы
@@ -379,9 +382,27 @@ end;
 
 function ComputeWithoutUpdScr<T>(f: () -> T): T;
 begin
-  UPD_SCR_TMR.Disable;
-  Result := f;
-  UPD_SCR_TMR.Enable;
+    UPD_SCR_TMR.Disable;
+    Result := f;
+    UPD_SCR_TMR.Enable;
+end;
+
+procedure DoWithoutUpdScr(p: () -> ());
+begin
+    UPD_SCR_TMR.Disable;
+    p();
+    UPD_SCR_TMR.Enable;
+end;
+
+function TextFromResourceFile(resname: string): string; 
+begin
+    var z: System.IO.Stream
+        := System.Reflection.Assembly.GetExecutingAssembly.GetManifestResourceStream(resname);
+    if (z = nil) then raise new System.Resources.MissingManifestResourceException(resname);
+    var ms: System.IO.MemoryStream := new System.IO.MemoryStream;
+    z.CopyTo(ms);
+    var un := System.Text.Encoding.UTF8.GetString(ms.ToArray);
+    Result := un;
 end;
 
 initialization
