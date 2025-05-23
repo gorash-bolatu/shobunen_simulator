@@ -14,7 +14,7 @@ uses Cursor, MyTimers, Procs, Achievements, Inventory, Tutorial, Draw, Anim, Cha
 uses _Log;
 
 {$DEFINE DOOBUG} // todo
-// TODO проверить чтобы не было паузы после выхода (В РЕЛИЗЕ!!!)
+// TODO проверить чтобы БЫЛА пауза перед выходом
 
 {$REGION глобальные_константы}
 const
@@ -1382,7 +1382,7 @@ begin
                     repeat
                         sleep(1);
                         write('Ь' * BufWidth);
-                        if KeyAvail then STOP(False);
+                        if KeyAvail then Halt;
                     until False;
                 end;
             {-} 'GET_CLOTHES', 'GET_CLOTHES_WARDROBE', 'GET_WARDROBE', 'CHECK_WARDROBE', 'CHANGECLOTHES',
@@ -1707,7 +1707,7 @@ end;
 
 {$REGION ключевые_сцены}
 var
-  
+    
     sFork := new PlayableScene(PART4, 'драка с костылём');
     
     sStart := (new PlayableScene(PART1, 'комната')).Linkup(
@@ -1722,7 +1722,7 @@ function GAMELOOP: boolean;
 var
     current_scene: Scene;
 begin
-    Result := False;
+    Result := True;
     Inventory.Reset;
     Route.SetRoute(Solo);
     current_scene := sStart;
@@ -1762,11 +1762,11 @@ begin
                         write('Начать заново? (Y/N)');
                         if YN then
                         begin
+                            Result := False;
                             _Log.Log('=== РЕСТАРТ');
                             TITLESCREEN;
-                            exit;
-                        end
-                        else STOP(True);
+                        end;
+                        exit;
                     end;
                 end;
             until False; // repeat end
@@ -1810,6 +1810,7 @@ begin
     if YN then
     begin
         _Log.Log('=== ФУЛЛ РЕСТАРТ');
+        Result := False;
         
         ClrScr;
         TxtClr(Color.Green);
@@ -1820,71 +1821,62 @@ begin
         sleep(500);
         // todo убрать и заменить на titlescreen
         
-    end
-    else Result := True;
+    end;
 end;
 
 procedure MAIN;
 begin
     try
-        try
-            
-            STARTUP('СИМУЛЯТОР ШОБУНЕНА', VERSION);
-            {$IFDEF DOOBUG}
-            writeln('DEBUG MODE');
-            Console.Title += ' [DEBUG MODE]';
-            WriteEqualsLine;
-            Chat.Skip := True;
-            {$ELSE}
-            TITLESCREEN;
-            {$ENDIF}
-            
-            var dbg: boolean := False;
-            {$IFDEF DOOBUG}
-            dbg := True;
-            {$ENDIF}
-            _Log.Init(VERSION, dbg);
-            
-            {$IFNDEF DOOBUG}
-            WHATSNEW;
-            {$ENDIF}
-            
-            var ended_game: boolean;
-            repeat
-                ended_game := GAMELOOP;
-            until ended_game;
         
+        if not STARTUP('СИМУЛЯТОР ШОБУНЕНА', VERSION) then exit;
+        {$IFDEF DOOBUG}
+        writeln('DEBUG MODE');
+        Console.Title += ' [DEBUG MODE]';
+        WriteEqualsLine;
+        Chat.Skip := True;
+        {$ELSE}
+        TITLESCREEN;
+        {$ENDIF}
+        
+        _Log.Init(VERSION, {$IFDEF DOOBUG} True {$ELSE} False {$ENDIF});
+        
+        {$IFNDEF DOOBUG}
+        WHATSNEW;
+        {$ENDIF}
+        
+        var ended_game: boolean;
+        repeat
+            ended_game := GAMELOOP;
+        until ended_game;
+    
         // отсюда идём в try...finally
-        except
-            on ___EX___: Exception do
-            begin
-                _Log.Log('!! ОШИБКА:');
-                _Log.Log(TAB + ___EX___.ToString);
-                if Console.IsOutputRedirected then writeln(___EX___.ToString)
-                else begin
-                    BgClr(Color.Black);
-                    ClrScr;
-                    TxtClr(Color.Cyan);
-                    writeln(#7);
-                    writeln('// Ой! Произошла ошибка.');
-                    writeln('// Свяжитесь с разработчиком и предоставьте следующее сообщение:');
-                    TxtClr(Color.Red);
-                    writeln;
-                    writeln(___EX___.GetType);
-                    writeln(___EX___.Message);
-                    writeln(___EX___.StackTrace);
-                    TxtClr(Color.DarkRed);
-                    _Log.DumpThmera;
-                    Cursor.Show;
-                    sleep(1000);
-                    Anim.Next3;
-                end;
-                ___EX___ := nil;
+    except
+        on ___EX___: Exception do
+        begin
+            _Log.Log('!! ОШИБКА:');
+            _Log.Log(TAB + ___EX___.ToString);
+            if Console.IsOutputRedirected then writeln(___EX___.ToString)
+            else begin
+                BgClr(Color.Black);
+                ClrScr;
+                TxtClr(Color.Cyan);
+                writeln(#7);
+                writeln('// Ой! Произошла ошибка.');
+                writeln('// Свяжитесь с разработчиком и предоставьте следующее сообщение:');
+                TxtClr(Color.Red);
+                writeln;
+                writeln(___EX___.GetType);
+                writeln(___EX___.Message);
+                writeln(___EX___.StackTrace);
+                TxtClr(Color.DarkRed);
+                _Log.DumpThmera;
+                Cursor.Show;
+                sleep(1000);
+                Anim.Next3;
             end;
-        end;// try except end
-    finally
-        STOP(True);
-    end;// try finally end
+            ___EX___ := nil;
+        end;
+    end;// try except end
     
 end;
 {$ENDREGION}
