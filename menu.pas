@@ -30,10 +30,10 @@ var
 begin
     repeat
         o_c := options.Count;
-                {$IFDEF DOOBUG}
+        {$IFDEF DOOBUG}
         if o_c > 32 then raise new Exception('СЛИШКОМ МНОГО ОПЦИЙ ВЫБОРА')
         else if o_c = 0 then raise new Exception('НЕТ ПУНКТОВ ВЫБОРА ДЛЯ МЕНЮ');
-                {$ENDIF}
+        {$ENDIF}
         point := 0;
         TxtClr(Color.Gray);
         foreach st: string in options do writeln(PROMPT + st);
@@ -109,7 +109,7 @@ procedure Load(element: string) := opt.Add(element);
 function UnloadSelect: string;
 begin
     Anim.Next3;
-    Result := Select(opt.ToArray);
+    Result := ComputeWithoutUpdScr(() -> Select(opt.ToArray));
     for var i: integer := 0 to (opt.Count - 1) do opt[i] := nil;
     opt.Clear;
 end;
@@ -117,7 +117,7 @@ end;
 function FastSelect(params options: array of string): string;
 begin
     Anim.Next3;
-    Result := Select(options);
+    Result := ComputeWithoutUpdScr(() -> Select(options));
 end;
 
 initialization

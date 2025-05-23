@@ -42,6 +42,8 @@ procedure BeepWait(frequency: word; duration: integer);
 function ElapsedMS: longword;
 /// подогнать размер окна
 procedure UpdScr;
+/// вычислить значение функции f с временно отключенной перерисовкой экрана
+function ComputeWithoutUpdScr<T>(f: () -> T): T;
 /// очистка строки
 procedure ClearLine(previous_line: boolean);
 /// очистка нескольких строк подряд
@@ -114,6 +116,7 @@ begin
     if (Console.WindowHeight < MIN_HEIGHT) then Console.WindowHeight := MIN_HEIGHT;
     if (Cursor.Top + MaxByte >= Console.BufferHeight) then Console.BufferHeight += MaxByte;
     if Cursor.HIDE_ON_UPDSCR then Console.CursorVisible := False;
+    Cursor.Find;
 end;
 
 procedure ClearLine(previous_line: boolean);
@@ -232,7 +235,7 @@ begin
             if not NilOrEmpty(prompt) then print(prompt);
             ClrKeyBuffer;
             Cursor.Show;
-            Result := ReadLnString;
+            Result := ComputeWithoutUpdScr(() -> ReadlnString);
             Cursor.Hide;
             try
                 Result := Result.TrimEnd(#10, #13);
@@ -372,6 +375,13 @@ begin
         Anim.Next3;
     end;
     ex := nil;
+end;
+
+function ComputeWithoutUpdScr<T>(f: () -> T): T;
+begin
+  UPD_SCR_TMR.Disable;
+  Result := f;
+  UPD_SCR_TMR.Enable;
 end;
 
 initialization
