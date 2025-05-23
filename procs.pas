@@ -72,7 +72,7 @@ procedure CollectGarbage;
 /// ввод + парсинг команды
 function ReadCmd(prompt: string := ''): string;
 /// получить строку текста из встроенного файла ресурсов
-function TextFromResourceFile(resname: string): string; 
+function TextFromResourceFile(resname: string): string;
 /// обработчик исключений
 procedure Puke(ex: Exception);
 /// успешна ли инициализация перед запуском программы
@@ -394,15 +394,28 @@ begin
     UPD_SCR_TMR.Enable;
 end;
 
-function TextFromResourceFile(resname: string): string; 
+function TextFromResourceFile(resname: string): string;
+var
+    resource_stream: System.IO.Stream;
+var
+    mem_stream: System.IO.MemoryStream;
 begin
-    var z: System.IO.Stream
-        := System.Reflection.Assembly.GetExecutingAssembly.GetManifestResourceStream(resname);
-    if (z = nil) then raise new System.Resources.MissingManifestResourceException(resname);
-    var ms: System.IO.MemoryStream := new System.IO.MemoryStream;
-    z.CopyTo(ms);
-    var un := System.Text.Encoding.UTF8.GetString(ms.ToArray);
-    Result := un;
+    try
+        resource_stream := System.Reflection.Assembly.GetExecutingAssembly.
+        GetManifestResourceStream(resname);
+        if (resource_stream = nil) then
+            raise new System.Resources.MissingManifestResourceException(resname);
+        mem_stream := new System.IO.MemoryStream;
+        resource_stream.CopyTo(mem_stream);
+        Result := System.Text.Encoding.UTF8.GetString(mem_stream.ToArray);
+    finally
+        resource_stream.Close;
+        resource_stream.Dispose;
+        resource_stream := nil;
+        mem_stream.Close;
+        mem_stream.Dispose;
+        mem_stream := nil;
+    end;
 end;
 
 initialization

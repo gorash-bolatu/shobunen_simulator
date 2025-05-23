@@ -14,7 +14,7 @@ uses Cursor, MyTimers, Procs, Achievements, Inventory, Tutorial, Draw, Anim, Cha
     TextToSpeech, Dialogue, SlashingMinigame, ButtonMashMinigames, Scenes;
 uses _Log;
 
-{$UNDEFINE DOOBUG} // todo
+{$DEFINE DOOBUG} // todo
 // TODO проверить чтобы БЫЛА пауза перед выходом
 
 {$REGION глобальные_константы}
