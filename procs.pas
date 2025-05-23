@@ -307,6 +307,7 @@ begin
         if not IsUnix then Console.InputEncoding := System.Text.Encoding.GetEncoding(1251);
         Console.OutputEncoding := System.Text.Encoding.UTF8;
     except
+        {ignore}
     end;
     if not (System.Globalization.CultureInfo.CurrentUICulture.Name.IsMatch('RU|BY|KZ', RegexOptions.IgnoreCase)) then
     begin
@@ -315,18 +316,18 @@ begin
         if not YN then exit;
         _Log.WarnedLanguage := True;
     end;
-    if (Console.LargestWindowWidth <= MIN_WIDTH) then
-        repeat
-            _Log.WarnedWindowSize := True;
-            sleep(10);
-            TxtClr(Color.Red);
-            writeln('Ошибка: превышено максимальное значение размера окна.');
-            writeln('Возможно, размер шрифта консоли слишком большой.');
-            writeln('Кликните правой кнопкой мыши по заголовку окна, затем выберите "Свойства", перейдите на вкладку "Шрифт", уменьшите его размер и нажмите "ОК".');
-            ClrKeyBuffer;
-            ReadKey;
-            ClrScr;
-        until (Console.LargestWindowWidth > MIN_WIDTH);
+    while (Console.LargestWindowWidth <= MIN_WIDTH) do
+    begin
+        _Log.WarnedWindowSize := True;
+        sleep(10);
+        TxtClr(Color.Red);
+        writeln('Ошибка: превышено максимальное значение размера окна.');
+        writeln('Возможно, размер шрифта консоли слишком большой.');
+        writeln('Кликните правой кнопкой мыши по заголовку окна, затем выберите "Свойства", перейдите на вкладку "Шрифт", уменьшите его размер и нажмите "ОК".');
+        ClrKeyBuffer;
+        ReadKey;
+        ClrScr;
+    end;
     UPD_SCR_TMR := new MyTimers.Timer(3, UpdScr);
     UPD_SCR_TMR.Enable;
     UpdScr;
