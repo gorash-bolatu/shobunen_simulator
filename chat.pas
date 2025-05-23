@@ -27,20 +27,20 @@ implementation
 uses Cursor, Procs, Tutorial;
 
 const
-    chat_width = 50;
+    CHAT_WIDTH = 50;
 
 procedure DrawTop;
 begin
     TxtClr(Color.DarkGray);
     BgClr(Color.Black);
-    writeln('┌', '─' * chat_width, '┐');
+    writeln('┌', '─' * CHAT_WIDTH, '┐');
 end;
 
 procedure DrawBottom;
 begin
     TxtClr(Color.DarkGray);
     BgClr(Color.Black);
-    writeln('└', '─' * chat_width, '┘');
+    writeln('└', '─' * CHAT_WIDTH, '┘');
 end;
 
 procedure DrawSides;
@@ -50,7 +50,7 @@ begin
     TxtClr(Color.DarkGray);
     write('│');
     BgClr(Color.DarkCyan);
-    write(' ' * chat_width);
+    write(' ' * CHAT_WIDTH);
     BgClr(Color.Black);
     write('│');
     Cursor.SetLeft(2);

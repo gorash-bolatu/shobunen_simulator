@@ -17,7 +17,7 @@ implementation
 uses Procs, Tutorial, Cursor, Draw;
 
 const
-    backspace: string = #8#32#8;
+    BACKSPACE: string = #8#32#8;
 
 procedure Text(const s: string; delay: word);
 begin
@@ -34,10 +34,10 @@ begin
     var cycle: boolean;
     repeat
         System.Threading.SpinWait.SpinUntil(() -> KeyAvail, 330);
-        if KeyAvail then break else write(cycle ? backspace : '>');
+        if KeyAvail then break else write(cycle ? BACKSPACE : '>');
         cycle := not cycle;
     until False;
-    if cycle then write(backspace);
+    if cycle then write(BACKSPACE);
     ClrKeyBuffer;
 end;
 
@@ -55,7 +55,7 @@ begin
     var len: byte;
     repeat
         System.Threading.SpinWait.SpinUntil(() -> KeyAvail, 240);
-        if KeyAvail or (len = 3) then write(backspace * len) else write('>');
+        if KeyAvail or (len = 3) then write(BACKSPACE * len) else write('>');
         if len = 3 then len := 0 else len += 1;
     until KeyAvail;
     if not Tutorial.AnimNextH.Shown then

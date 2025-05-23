@@ -2,7 +2,7 @@
 
 interface
 
-procedure WriteAndRet(const strg: string);
+procedure Text(const strg: string);
 procedure TextVert(const strg: string);
 procedure Ascii(const strg: string);
 procedure Ascii(params arstrg: array of string);
@@ -15,7 +15,7 @@ implementation
 
 uses Procs, Cursor;
 
-procedure WriteAndRet(const strg: string);
+procedure Text(const strg: string);
 begin
     if (Cursor.Left + strg.Length >= BufWidth) then Console.BufferWidth += strg.Length;
     write(strg);
@@ -32,25 +32,25 @@ begin
     Cursor.GoTop(-strg.Length);
 end;
 
-procedure Ascii(const strg: string) := WriteAndRet(strg);
+procedure Ascii(const strg: string) := Text(strg);
 
 procedure Ascii(params arstrg: array of string);
 begin
     foreach istrg: string in arstrg do
     begin
-        WriteAndRet(istrg);
+        Text(istrg);
         Cursor.GoTop(+1);
     end;
     Cursor.GoTop(-arstrg.Length);
 end;
 
-procedure EraseLine(width: byte) := WriteAndRet(' ' * width);
+procedure EraseLine(width: byte) := Text(' ' * width);
 
 procedure Erase(width, height: byte);
 begin
     loop height do
     begin
-        WriteAndRet(' ' * width);
+        Text(' ' * width);
         Cursor.GoTop(+1);
     end;
     Cursor.GoTop(-height);

@@ -13,7 +13,7 @@ type
 
 var
     CommandH, InventoryH, MenuH, ElevatorH, LookAroundH, AnimNextH, DialogueH, ChatH: Hint;
-    
+
 procedure Comment(params lines: array of string);
 procedure ShowCheckHint;
 
