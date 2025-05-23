@@ -20,7 +20,7 @@ implementation
 uses Procs, Anim;
 
 var
-  ListOfAll: List<EscapeRoom> := new List<EscapeRoom>;
+    ListOfAll: List<EscapeRoom> := new List<EscapeRoom>;
 
 constructor EscapeRoom.Create(proc: procedure);
 begin
@@ -52,5 +52,10 @@ begin
     ListOfAll.Clear;
     ListOfAll := nil;
 end;
+
+initialization
+
+finalization
+    Cleanup;
 
 end.

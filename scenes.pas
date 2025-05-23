@@ -55,7 +55,7 @@ function Scene.Linkup(params scenes: array of Scene): Scene;
 begin
     if (scenes.Length = 0) then exit;
     self.next := scenes[0];
-    for var i: integer := 1 to (scenes.Length-1) do scenes[i-1].next := scenes[i];
+    for var i: integer := 1 to (scenes.Length - 1) do scenes[i - 1].next := scenes[i];
     Result := self;
 end;
 
@@ -78,5 +78,10 @@ begin
     ListOfAll.Clear;
     ListOfAll := nil;
 end;
+
+initialization
+
+finalization
+    Cleanup;
 
 end.

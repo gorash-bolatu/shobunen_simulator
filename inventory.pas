@@ -99,6 +99,11 @@ begin
     TxtClr(Color.Yellow);
     if IsEmpty then writeln('Предметов нет.')
     else foreach s: string in GetNames do writeln('=== ' + s);
-end;    
+end;
+
+initialization
+
+finalization
+    Cleanup;
 
 end.

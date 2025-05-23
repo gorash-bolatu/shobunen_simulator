@@ -6,7 +6,6 @@ interface
 procedure Load(element: string);
 function UnloadSelect: string;
 function FastSelect(params options: array of string): string;
-procedure Cleanup;
 
 
 
@@ -16,10 +15,8 @@ uses Procs, Tutorial, Cursor, Draw, Inventory, Anim;
 uses _Log;
 
 const
-    prompt: string = '>>> ';
-
-const
-    backarrow: string = '<--';
+    PROMPT: string = '>>> ';
+    BACKARROW: string = '<--';
 
 var
     opt: List<string> := new List<string>;
@@ -39,7 +36,7 @@ begin
                 {$ENDIF}
         point := 0;
         TxtClr(Color.Gray);
-        foreach st: string in options do writeln(prompt + st);
+        foreach st: string in options do writeln(PROMPT + st);
         if not Tutorial.MenuH.Shown then
         begin
             Tutorial.Comment('перемещение стрелками или W/S, выбор на Enter или пробел');
@@ -50,14 +47,14 @@ begin
         end;
         Cursor.GoTop(-o_c);
         repeat
-            o_p := prompt + options[point];
+            o_p := PROMPT + options[point];
             Cursor.GoTop(+point);
             TxtClr(Color.Yellow);
-            Draw.WriteAndRet(o_p);
+            Draw.Text(o_p);
             ClrKeyBuffer;
             k := ReadKey;
             TxtClr(Color.Gray);
-            Draw.WriteAndRet(o_p);
+            Draw.Text(o_p);
             Cursor.GoTop(-point);
             case k of
                 Key.Enter, Key.Tab, Key.Select, Key.Spacebar, Key.NumPad5: break;
@@ -68,22 +65,22 @@ begin
             else if (point + 1 > o_c) then point := 0; // overflow
         until False;
         ClearLines((o_c + 1), True);
-        if (options[0] = backarrow) and (point > 0) then Cursor.GoTop(-1);
+        if (options[0] = BACKARROW) and (point > 0) then Cursor.GoTop(-1);
         TxtClr(Color.Gray);
-        writeln(((options[0] = backarrow) ? prompt : '> '), options[point], NewLine);
+        writeln(((options[0] = BACKARROW) ? PROMPT : '> '), options[point], NewLine);
         Result := options[point].ToLower;
         _Log.Log($'= меню: [{point}] {Result}');
         case Result of
             {-} 'использовать предмет':
                 begin
                     var l: List<string> := new List<string>;
-                    l.Add(backarrow);
+                    l.Add(BACKARROW);
                     l.AddRange(Inventory.GetNames);
                     Result := Select(l.ToArray);
                     l.Clear;
                     l := nil;
                     if NilOrEmpty(Result) then ClearLines(Inventory.Count + 3, True)
-                    else if (Result = backarrow) then
+                    else if (Result = BACKARROW) then
                     begin
                         Cursor.GoTop(-2);
                         ClearLine(False)
@@ -123,6 +120,10 @@ begin
     Result := Select(options);
 end;
 
-procedure Cleanup() := opt := nil;
+initialization
+
+finalization
+    opt.Clear;
+    opt := nil;
 
 end.

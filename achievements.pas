@@ -44,9 +44,9 @@ end;
 
 destructor Achievement.Destroy;
 begin
-  self.fName := nil;
-  self.fDesc := nil;
-  self.fWalkthrough := nil;
+    self.fName := nil;
+    self.fDesc := nil;
+    self.fWalkthrough := nil;
 end;
 
 procedure DisplayAll;
@@ -107,5 +107,10 @@ begin
     ListOfAll.Clear;
     ListOfAll := nil;
 end;
+
+initialization
+
+finalization
+    Cleanup;
 
 end.
