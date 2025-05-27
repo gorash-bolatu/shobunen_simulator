@@ -43,7 +43,7 @@ function ElapsedMS: longword;
 /// подогнать размер окна
 procedure UpdScr;
 /// вычислить значение функции func с временно отключенной перерисовкой экрана
-function ComputeWithoutUpdScr<T>(func: T): T;
+function ComputeWithoutUpdScr<T>(func: () -> T): T;
 /// выполнить proc с временно отключенной перерисовкой экрана
 procedure DoWithoutUpdScr(proc: procedure);
 /// очистка строки
@@ -239,7 +239,7 @@ begin
             if not NilOrEmpty(prompt) then print(prompt);
             ClrKeyBuffer;
             Cursor.Show;
-            Result := ComputeWithoutUpdScr(ReadlnString);
+            Result := ComputeWithoutUpdScr(() -> ReadlnString);
             Cursor.Hide;
             try
                 Result := Result.TrimEnd(#10, #13);
@@ -368,7 +368,7 @@ begin
     ex := nil;
 end;
 
-function ComputeWithoutUpdScr<T>(func: T): T;
+function ComputeWithoutUpdScr<T>(func: () -> T): T;
 begin
     UPD_SCR_TMR.Disable;
     Result := func;
