@@ -11,7 +11,7 @@ function FastSelect(params options: array of string): string;
 
 implementation
 
-uses Procs, Tutorial, Cursor, Draw, Inventory, Anim;
+uses Procs, Tutorial, Cursor, Draw, Inventories, Anim;
 uses _Log;
 
 const
@@ -75,11 +75,11 @@ begin
                 begin
                     var l: List<string> := new List<string>;
                     l.Add(BACKARROW);
-                    l.AddRange(Inventory.GetNames);
+                    l.AddRange(Inventories.Active.GetNames);
                     Result := Select(l.ToArray);
                     l.Clear;
                     l := nil;
-                    if NilOrEmpty(Result) then ClearLines(Inventory.Count + 3, True)
+                    if NilOrEmpty(Result) then ClearLines(Inventories.Active.ItemCount + 3, True)
                     else if (Result = BACKARROW) then
                     begin
                         Cursor.GoTop(-2);
@@ -94,7 +94,7 @@ begin
                 end;
             {-} 'проверить инвентарь':
                 begin
-                    Inventory.Output;
+                    Inventories.Active.Output;
                     Anim.Next1;
                     writeln;
                 end;

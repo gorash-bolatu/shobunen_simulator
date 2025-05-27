@@ -3,7 +3,7 @@ unit Procs;
 
 interface
 
-uses MyTimers;
+uses MyTimers, Inventories;
 
 type
     Color = System.ConsoleColor;
@@ -82,7 +82,7 @@ function STARTUP(prog_name: string; prog_version: string): boolean;
 
 implementation
 
-uses Cursor, MyTimers, Inventory, Parser, Anim;
+uses Cursor, MyTimers, Inventories, Parser, Anim;
 uses _Log;
 
 var
@@ -281,7 +281,7 @@ begin
         Result := Parser.ParseCmd(Result);
         if NilOrEmpty(prompt) then _Log.Log($'[{Result}]')
         else _Log.Log($'(префикс:"{prompt}") [{Result}]');
-        if (Result = 'INV') or (Result = 'CHECK_INV') then Inventory.Output
+        if (Result = 'INV') or (Result = 'CHECK_INV') then Inventories.Active.Output
         else break;
     until False;
     TxtClr(Color.White);

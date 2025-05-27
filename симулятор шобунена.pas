@@ -8,7 +8,7 @@ program shobu_sim;
 {$TITLE Симулятор Шобунена}
 {$STRING_NULLBASED-}
 
-uses Cursor, MyTimers, Procs, Achievements, Inventory, Tutorial, Draw, Anim, Chat, Menu,
+uses Cursor, MyTimers, Procs, Achievements, Inventories, Tutorial, Draw, Anim, Chat, Menu,
     Scenes, Dialogue, SlashingMinigame, ButtonMashMinigames, Matrix;
 uses _Log;
 
@@ -46,6 +46,11 @@ const
     itShard: Item = (name: 'Осколок зеркала');
     itDog: Item = (name: 'Юпитер');
 {$ENDREGION}
+
+    {$REGION инвентари}
+var
+    Inv: Inventory := new Inventory;
+    {$ENDREGION}
 
     {$REGION ачивки}
 var
@@ -313,7 +318,7 @@ var
         writeln('Ты можешь написать корешам, посмотреть Рутуб или скачать плохие российские фильмы.');
         writeln('Также на компьютере несколько игр: "Казачки", "Megamuzhik", бета-версия "UNBG"...');
         writeln('Наконец, на рабочем столе папка с твоей собственной игрой "Ultimate Alliance".');
-        if Inventory.Has(itHdd) then writeln('Ах да, ещё у тебя с собой тот жёсткий диск - его можно подключить.');
+        if Inv.Has(itHdd) then writeln('Ах да, ещё у тебя с собой тот жёсткий диск - его можно подключить.');
         writeln('Итак, что ты будешь делать с компьютером?');
         repeat
             if not (Route.TextedVasya and Route.TextedRita) then Menu.Load('написать друзьям');
@@ -323,8 +328,8 @@ var
             if not played_megamuzhik then Menu.Load('играть в Мегамужика');
             Menu.Load('играть в UNBG');
             if not programmed then Menu.Load('программировать Ultimate Alliance');
-            if (Inventory.Has(itHdd) and not used_empty_hdd) then Menu.Load('подключить жёсткий диск');
-            if not Inventory.IsEmpty then Menu.Load('проверить инвентарь');
+            if (Inv.Has(itHdd) and not used_empty_hdd) then Menu.Load('подключить жёсткий диск');
+            if not Inv.IsEmpty then Menu.Load('проверить инвентарь');
             Menu.Load(torrenting_movies ? 'отойти от компьютера' : 'выключить компьютер');
             MENURES := Menu.UnloadSelect;
             case MENURES of // case begin
@@ -567,7 +572,7 @@ var
         until found_charger;
         if found_charger then
         begin
-            Inventory.Obtain(itCharger);
+            Inv.Obtain(itCharger);
             achSherlock.Achieve;
         end;
     end;
@@ -610,13 +615,13 @@ begin
                     if broke_table then
                     begin
                         write('Стол разбит, как и стоявший на нём ноутбук.');
-                        if not Inventory.Has(itCola) then write(' На полу валяется бутылка с колой.');
+                        if not Inv.Has(itCola) then write(' На полу валяется бутылка с колой.');
                         writeln;
                     end
                     else
                     begin
                         write('На столе ноутбук');
-                        if not Inventory.Has(itCola) then write(' и недопитая тобой вчерашняя бутылка колы');
+                        if not Inv.Has(itCola) then write(' и недопитая тобой вчерашняя бутылка колы');
                         writeln('.');
                     end;
                     if (broke_bed or broke_box or (broke_laptop and not broke_table) or burned_laptop or broke_window) then
@@ -637,7 +642,7 @@ begin
                 else begin
                     writeln('Ты переворачиваешь стол. С него на пол летят все вещи.');
                     writeln('О нет! Твой дорогущий ноутбук ломается пополам! Такое не отремонтировать...');
-                    if not Inventory.Has(itCola) then writeln('Зато бутылка, вроде, осталась в порядке.');
+                    if not Inv.Has(itCola) then writeln('Зато бутылка, вроде, осталась в порядке.');
                     broke_table := True;
                     broke_laptop := True;
                 end;
@@ -656,11 +661,11 @@ begin
                 if burned_laptop then writeln('Ты спалил компьютер!') else
                 if charged_laptop then
                     if CMDRES.Contains('HDD') then
-                        if Inventory.Has(itHdd) then Computer else
+                        if Inv.Has(itHdd) then Computer else
                         begin
                             if not broke_box then writeln('Ты достаёшь жёсткий диск из ящика с кучей старых запылившихся вещей.');
                             writeln('Ого, тут целый терабайт! С этим можно что-то сделать...');
-                            Inventory.Obtain(itHdd);
+                            Inv.Obtain(itHdd);
                             Anim.Next3;
                             Computer;
                         end
@@ -679,7 +684,7 @@ begin
                     broke_laptop := True;
                 end;
             {-} 'GET_CHARGER', 'DETECTIVE':
-                if found_charger then println('Ты уже', (Inventory.Has(itCharger) ? 'нашёл' : 'использовал'), 'зарядку!')
+                if found_charger then println('Ты уже', (Inv.Has(itCharger) ? 'нашёл' : 'использовал'), 'зарядку!')
                 else begin
                     TxtClr(Color.Yellow);
                     writeln('=== РАССЛЕДОВАНИЕ ===');
@@ -701,23 +706,23 @@ begin
                 if broke_laptop then writeln('Вряд ли ты сможешь зарядить то, что осталось от ноутбука...')
                 else if burned_laptop then writeln('Ты спалил компьютер!')
                 else if charged_laptop then writeln('Компьютер уже заряжается! Можно за него сесть.')
-                else if not Inventory.Has(itCharger) then writeln('Для этого понадобится найти зарядку.')
+                else if not Inv.Has(itCharger) then writeln('Для этого понадобится найти зарядку.')
                 else begin
-                    Inventory.Use(itCharger);
+                    Inv.Use(itCharger);
                     writeln('Ты подключаешь зарядку и начинаешь заряжать компьютер.');
                     writeln('Теперь его наконец-то можно включить.');
                     charged_laptop := True;
                 end;
             {-} 'CHECK_BOTTLE', 'CHECK_COLA', 'GET_BOTTLE', 'GET_COLA', 'GET_BOTTLE_COLA', 'GET_COLA_BOTTLE',
             'DRINK_BOTTLE', 'DRINK_COLA', 'DRINK_BOTTLE_COLA', 'DRINK_COLA_BOTTLE':
-                if Inventory.Has(itCola) then
+                if Inv.Has(itCola) then
                     if CMDRES.StartsWith('DRINK') then writeln('Пожалуй, это тебе ещё пригодится...')
                     else writeln('Ты уже взял колу.')
                 else begin
                     print('Ты берёшь');
                     if not broke_table then print('со стола');
                     writeln('недопитую бутылку колы.');
-                    Inventory.Obtain(itCola);
+                    Inv.Obtain(itCola);
                     if CMDRES.StartsWith('DRINK') then writeln('Пожалуй, это тебе ещё пригодится...');
                 end;
             {-} 'SIT_BED', 'SLEEP', 'SLEEP_BED', 'GO_BED', 'GOUP_BED', 'OPEN_BED', 'GO_SLEEP', 'SIT_SLEEP', 'BED_SLEEP':
@@ -800,12 +805,12 @@ begin
                     exit; // gameover
                 end;
             {-} 'GET_HDD', 'GET_HDD_BOX', 'GET_BOX_HDD':
-                if Inventory.Has(itHdd) then writeln('Ты уже взял жёсткий диск из ящика.') else
+                if Inv.Has(itHdd) then writeln('Ты уже взял жёсткий диск из ящика.') else
                 begin
                     if not broke_box then writeln('Ты достаёшь свой ящик с кучей старых запылившихся вещей.');
                     writeln('Ты ищещь некий жёсткий диск и... находишь его!');
                     writeln('Ого, тут целый терабайт! С этим можно что-то сделать...');
-                    Inventory.Obtain(itHdd);
+                    Inv.Obtain(itHdd);
                 end;
             {-} 'BREAK_BOX', 'BREAK_BOX_BOX':
                 if broke_box then writeln('Ты уже сломал ящик!')
@@ -822,10 +827,10 @@ begin
                     writeln('Также есть несколько плохих российских фильмов на дисках...');
                     writeln('Школьные тетради с учебниками, настолки, заначка с деньгами...');
                     writeln('Сейчас это всё тебе вряд ли будет нужно.');
-                    if not Inventory.Has(itHdd) then
+                    if not Inv.Has(itHdd) then
                     begin
                         writeln('Но вот жёсткий диск на целый терабайт! С ним уже можно что-то сделать...');
-                        Inventory.Obtain(itHdd);
+                        Inv.Obtain(itHdd);
                     end;
                 end;
             {-} 'GO', 'GO_STREET':
@@ -837,7 +842,7 @@ begin
                     Anim.Next3;
                     writeln('С тобой из двери выбегает собака. Это твоя такса, Юпитер.');
                     writeln('Похоже, он просится на улицу. Что ж, вам по пути!');
-                    Inventory.SilentObtain(itDog);
+                    Inv.SilentObtain(itDog);
                     if torrenting_movies then
                     begin
                         Anim.Next3;
@@ -884,7 +889,7 @@ begin
         case CMDRES of
             {-}'CHECK', 'GET':
                 if opened_hatch then writeln('Возможно, стоит подняться наверх?')
-                else if Inventory.Has(itShard) then
+                else if Inv.Has(itShard) then
                     writeln('Люк на потолке... Можно попытаться открыть его осколком стекла!')
                 else writeln('Точно, зеркало! Вдруг с ним что-то можно сделать?..');
             {-}'GET_DOG': writeln('Юпитер и так с тобой!');
@@ -914,7 +919,7 @@ begin
             'BREAK_MIRROR_BOTTLE_COLA', 'BREAK_BOTTLE_COLA_MIRROR', 'THROW_MIRROR_BOTTLE_COLA', 'THROW_BOTTLE_COLA_MIRROR',
             'BREAK_MIRROR_COLA_BOTTLE', 'BREAK_COLA_BOTTLE_MIRROR', 'THROW_MIRROR_COLA_BOTTLE', 'THROW_COLA_BOTTLE_MIRROR',
             'THROW_COLA', 'THROW_BOTTLE', 'THROW_COLA_BOTTLE', 'THROW_BOTTLE_COLA', 'GET_DOG_THROW_MIRROR':
-                if Inventory.Has(itShard) then writeln('Ты уже сломал зеркало.')
+                if Inv.Has(itShard) then writeln('Ты уже сломал зеркало.')
                 else begin
                     if CMDRES.IsMatch('^TAKEOFF|GET_M') then
                     begin
@@ -927,7 +932,7 @@ begin
                         writeln('Оно с треском разбивается, а собака громко взвизгивает и падает на пол!');
                     end
                     else if CMDRES.IsMatch('COLA|BOTTLE') then
-                        if Inventory.Has(itCola) then println('Ты бросаешь бутылку с колой прямо в зеркало, и оно разбивается.')
+                        if Inv.Has(itCola) then println('Ты бросаешь бутылку с колой прямо в зеркало, и оно разбивается.')
                         else begin
                             writeln('Так не пойдёт. Нужно попробовать что-нибудь ещё.');
                             Tutorial.ShowCheckHint;
@@ -935,7 +940,7 @@ begin
                         end
                     else writeln('Ты вмазываешь по зеркалу со всей силы и разбиваешь его.');
                     writeln('С пола ты поднимаешь осколок стекла.');
-                    Inventory.Obtain(itShard);
+                    Inv.Obtain(itShard);
                 end;
             {-}'GO', 'GO_LIFT', 'GOUP', 'GOUP_LIFT', 'GO_HATCH', 'GOUP_HATCH', 'GO_HATCH_LIFT', 'GOUP_HATCH_LIFT',
             'GO_LIFT_HATCH', 'GOUP_LIFT_HATCH', 'CHECK_HATCH', 'GET_HATCH':
@@ -963,7 +968,7 @@ begin
             'OPEN_ATTACH_HATCH', 'BREAK_ATTACH_HATCH', 'CUT_ATTACH_HATCH', 'CHECK_ATTACH_HATCH',
             'OPEN_HATCH_ATTACH', 'BREAK_HATCH_ATTACH', 'CUT_HATCH_ATTACH', 'CHECK_HATCH_ATTACH':
                 if opened_hatch then writeln('Ты уже открыл люк.')
-                else if Inventory.Has(itShard) then begin
+                else if Inv.Has(itShard) then begin
                     writeln('Ты подрезаешь крепления осколком стекла.');
                     writeln('Ха! Это было как-то... даже слишком просто.');
                     opened_hatch := True;
@@ -1204,7 +1209,7 @@ var
     current_scene: Scene;
 begin
     Result := True;
-    Inventory.Reset;
+    Inv.Reset;
     Route.SetRoute(Solo);
     current_scene := sStart;
     repeat
@@ -1212,10 +1217,10 @@ begin
         // части с возможностью геймовера:
         begin
             _Log.Log('=== часть: ' + current_scene.name);
-            Inventory.Save;
+            Inv.Save;
             var passed: boolean;
             repeat
-                Inventory.Load;
+                Inv.Load;
                 passed := (current_scene as PlayableScene).Passed;
                 if passed then break else
                 begin
@@ -1329,6 +1334,7 @@ begin
     WHATSNEW;
     {$ENDIF}
     
+    Inv.Use;
     var ended_game: boolean;
     repeat
         ended_game := GAMELOOP;
