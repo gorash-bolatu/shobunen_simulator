@@ -1,7 +1,9 @@
-﻿unit ButtonMashMinigames;
+﻿{$RESOURCE fakecode.c}
+unit ButtonMashMinigames;
 
 interface
 
+function ProgrammingTime: real;
 procedure DoorBreaking;
 function JojoSmall(difficulty_relief: byte): boolean;
 function JojoBig: boolean;
@@ -14,6 +16,118 @@ uses _Log;
 
 var
     failed_attempts_s, failed_attempts_b: word;
+
+function ProgrammingTime: real;
+const
+    ProgWidth: byte = 86;
+var
+    stm: DateTime;
+    OH_NO: array of string;
+    
+    function SpeedrunTime: string;
+    begin
+        var stm_ppt: System.TimeSpan := DateTime.Now.Subtract(stm);
+        Result := (stm_ppt.Minutes < 1) ? (stm_ppt.ToString('mm\:ss\,fff')) : 'bruh      ';
+    end;
+    
+    procedure srtm;
+    var
+        curpos: integer;
+    begin
+        while not KeyAvail do
+        begin
+            curpos := Cursor.Left;
+            Cursor.SetLeft(89);
+            TxtClr(Color.Cyan);
+            write(SpeedrunTime);
+            Cursor.SetLeft(curpos);
+            TxtClr(Color.DarkGreen);
+            sleep(1);
+        end;
+        Cursor.Show;
+        _Log.mInputs += 1;
+        _Log.Val.Add(MillisecondsDelta);
+    end;
+
+begin
+    (_Log.mInputs, _Log.mTime) := (0, 0);
+    writeln('СПИДРАН ПО ПРОГРАММИРОВАНИЮ' + TAB + 'ПОЕХАЛИ');
+    var code: string := TextFromResourceFile('fakecode.c');
+    try
+        OH_NO := code.Split(NewLine.ToCharArray, System.StringSplitOptions.RemoveEmptyEntries);
+        code := nil;
+        TxtClr(Color.Gray);
+        BgClr(Color.Black);
+        writeln('┌', '─' * ProgWidth, '┐');
+        Cursor.Show;
+        stm := DateTime.Now;
+        _Log.Val.Clear; MillisecondsDelta;
+        for var line := 0 to (Length(OH_NO) - 1) do
+        begin
+            BgClr(Color.Black);
+            Cursor.SetLeft(0);
+            TxtClr(Color.Gray);
+            write('│', ' ' * ProgWidth, '│');
+            Cursor.SetLeft(2);
+            TxtClr(Color.DarkGreen);
+            ClrKeyBuffer;
+            if (line < 5) or (Random(1 + Floor(1.015 * line)) = 0) then srtm;
+            foreach ch: char in OH_NO[line] do
+            begin
+                ClrKeyBuffer;
+                if (Random(5 * Floor(1.015 ** line)) = 0) then srtm;
+                write(ch);
+            end;
+            Cursor.SetLeft(89);
+            writeln(' ' * SpeedrunTime.Length);
+        end;
+        _Log.mTime := DateTime.Now.Subtract(stm).TotalMilliseconds.Round;
+        Result := DateTime.Now.Subtract(stm).TotalSeconds;
+        Cursor.Hide;
+        TxtClr(Color.Gray);
+        BgClr(Color.Black); // ?
+        writeln('├', '─' * ProgWidth, '┤');
+        writeln('│', ' ' * ProgWidth, '│');
+        writeln('└', '─' * ProgWidth, '┘');
+        ClrKeyBuffer;
+        ReadKey;
+        sleep(300);
+        Cursor.GoXY(+2, -2);
+        TxtClr(Color.Red);
+        write('Compilation error: Segmentation fault (core dumped) at address 0x');
+        loop 3 do write(Random(MaxSmallInt).ToString('X')); // ToString('X') - из десятичной в hex
+        writeln;
+        sleep(800);
+        ClrKeyBuffer;
+        ReadKey;
+        Cursor.GoTop(-(OH_NO.Length + 4));
+        ClearLines((OH_NO.Length + 6), True);
+    finally
+        if (OH_NO <> nil) then
+        begin
+            for var i: integer := 0 to (OH_NO.Length - 1) do OH_NO[i] := nil;
+            OH_NO := nil;
+        end;
+    end; // try end
+    TxtClr(Color.White);
+    ClrKeyBuffer;
+    writeln('Очередная попытка написать код для "Ultimate Alliance" оборачивается провалом!');
+    writeln('Все эти месяцы изучения программирования по индийским туториалам оказались бесполезны.');
+    writeln('Оказывается, создавать видеоигры не так-то просто...');
+    Console.WindowTop -= Console.WindowHeight div 3;
+    
+    _Log.Log('======= Presses: ' + _Log.mInputs.ToString);
+    _Log.Log('======= AvgCharsPerPress: ' + (5212 / _Log.mInputs).ToString);
+    _Log.Log('======= Time: ' + _Log.mTime.ToString);
+    _Log.Val.Sort;
+    _Log.Log('======= AvgPressTime: ' + (_Log.Val.Average).ToString);
+    _Log.Log('======= Median: ~' + (_Log.Val.Item[_Log.Val.LongCount div 2]).ToString);
+    _Log.Log('======= Min: ' + (_Log.Val.First).ToString);
+    _Log.Log('======= Max: ' + (_Log.Val.Last).ToString);
+    _Log.Val.Clear;
+    CollectGarbage;
+    
+end;
 
 procedure DoorBreaking;
 const
