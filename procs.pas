@@ -42,9 +42,10 @@ procedure BeepWait(frequency: word; duration: integer);
 function ElapsedMS: longword;
 /// подогнать размер окна
 procedure UpdScr;
-/// вычислить значение функции f с временно отключенной перерисовкой экрана
-function ComputeWithoutUpdScr<T>(f: () -> T): T;
-procedure DoWithoutUpdScr(p: () -> ());
+/// вычислить значение функции func с временно отключенной перерисовкой экрана
+function ComputeWithoutUpdScr<T>(func: T): T;
+/// выполнить proc с временно отключенной перерисовкой экрана
+procedure DoWithoutUpdScr(proc: procedure);
 /// очистка строки
 procedure ClearLine(previous_line: boolean);
 /// очистка нескольких строк подряд
@@ -72,7 +73,7 @@ procedure CollectGarbage;
 /// ввод + парсинг команды
 function ReadCmd(prompt: string := ''): string;
 /// получить строку текста из встроенного файла ресурсов
-function TextFromResourceFile(resname: string): string;
+function TextFromResourceFile(const resname: string): string;
 /// обработчик исключений
 procedure Puke(ex: Exception);
 /// успешна ли инициализация перед запуском программы
@@ -238,7 +239,7 @@ begin
             if not NilOrEmpty(prompt) then print(prompt);
             ClrKeyBuffer;
             Cursor.Show;
-            Result := ComputeWithoutUpdScr(() -> ReadlnString);
+            Result := ComputeWithoutUpdScr(ReadlnString);
             Cursor.Hide;
             try
                 Result := Result.TrimEnd(#10, #13);
@@ -367,41 +368,45 @@ begin
     ex := nil;
 end;
 
-function ComputeWithoutUpdScr<T>(f: () -> T): T;
+function ComputeWithoutUpdScr<T>(func: T): T;
 begin
     UPD_SCR_TMR.Disable;
-    Result := f;
+    Result := func;
     UPD_SCR_TMR.Enable;
 end;
 
-procedure DoWithoutUpdScr(p: () -> ());
+procedure DoWithoutUpdScr(proc: procedure);
 begin
     UPD_SCR_TMR.Disable;
-    p();
+    proc();
     UPD_SCR_TMR.Enable;
 end;
 
-function TextFromResourceFile(resname: string): string;
+function TextFromResourceFile(const resname: string): string;
 var
     resource_stream: System.IO.Stream;
-var
     mem_stream: System.IO.MemoryStream;
 begin
     try
-        resource_stream := System.Reflection.Assembly.GetExecutingAssembly.
-        GetManifestResourceStream(resname);
+        resource_stream := PABCSystem.GetResourceStream(resname);
         if (resource_stream = nil) then
             raise new System.Resources.MissingManifestResourceException(resname);
         mem_stream := new System.IO.MemoryStream;
         resource_stream.CopyTo(mem_stream);
         Result := System.Text.Encoding.UTF8.GetString(mem_stream.ToArray);
     finally
-        resource_stream.Close;
-        resource_stream.Dispose;
-        resource_stream := nil;
-        mem_stream.Close;
-        mem_stream.Dispose;
-        mem_stream := nil;
+        if (resource_stream <> nil) then
+        begin
+            // resource_stream.Close;
+            resource_stream.Dispose;
+            resource_stream := nil;
+        end;
+        if (mem_stream <> nil) then
+        begin
+            // mem_stream.Close;
+            mem_stream.Dispose;
+            mem_stream := nil;
+        end;
     end;
 end;
 
