@@ -376,9 +376,16 @@ begin
             if interrupt or not HealthInBounds then break;
         end;
     finally
-        loaded := nil;
-        upd_health_tmr.Destroy;
-        upd_health_tmr := nil;
+        if (loaded <> nil) then
+        begin
+            loaded.Clear;
+            loaded := nil;
+        end;
+        if (upd_health_tmr <> nil) then
+        begin
+            upd_health_tmr.Destroy;
+            upd_health_tmr := nil;
+        end;
     end;
     Result := (health > 0);
     if Result then failed_attempts := 0 else failed_attempts += 1;

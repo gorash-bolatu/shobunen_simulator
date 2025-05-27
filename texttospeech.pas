@@ -44,13 +44,15 @@ end;
 procedure Dispose;
 begin
     if (synth <> nil) then
+    begin
         try
             synth.SpeakAsyncCancelAll;
-            synth.Dispose;
-            synth := nil;
         except
-        {ignore}
+            {ignore}
         end;
+        synth.Dispose;
+        synth := nil;
+    end;
     DO_TTS := False;
 end;
 
@@ -140,8 +142,11 @@ begin
             // Dispose;
         end;
     finally
-        clr_scr_tmr.Destroy;
-        clr_scr_tmr := nil;
+        if (clr_scr_tmr <> nil) then
+        begin
+            clr_scr_tmr.Destroy;
+            clr_scr_tmr := nil;
+        end;
         voices := nil;
         CollectGarbage;
     end;
