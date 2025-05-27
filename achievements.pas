@@ -98,7 +98,7 @@ begin
         writeln;
     end;
     Cursor.GoTop(-1);
-    DoWithoutUpdScr(() -> Anim.Next3());
+    DoWithoutUpdScr(Anim.Next3);
 end;
 
 initialization

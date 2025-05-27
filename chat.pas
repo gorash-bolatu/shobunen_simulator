@@ -135,4 +135,9 @@ begin
     if not Skip then sleep(600);
 end;
 
+initialization
+
+finalization
+    Name := nil;
+
 end.

@@ -5,9 +5,8 @@ interface
 type
     
     Scene = abstract class
-    private
-        constructor Create(scenename: string);
     protected
+        constructor Create(scenename: string);
         destructor Destroy;
     public
         name: string;

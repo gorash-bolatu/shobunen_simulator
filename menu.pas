@@ -109,7 +109,7 @@ procedure Load(element: string) := opt.Add(element);
 function UnloadSelect: string;
 begin
     Anim.Next3;
-    Result := ComputeWithoutUpdScr(() -> Select(opt.ToArray));
+    Result := ComputeWithoutUpdScr(Select(opt.ToArray));
     for var i: integer := 0 to (opt.Count - 1) do opt[i] := nil;
     opt.Clear;
 end;
@@ -117,7 +117,7 @@ end;
 function FastSelect(params options: array of string): string;
 begin
     Anim.Next3;
-    Result := ComputeWithoutUpdScr(() -> Select(options));
+    Result := ComputeWithoutUpdScr(Select(options));
 end;
 
 initialization
