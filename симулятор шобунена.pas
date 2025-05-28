@@ -23,7 +23,6 @@ const
 
 {$REGION руты}
 type
-    
     route_enum = (Solo, Rita, Trip, Roma);
     Route = static class
     private
@@ -33,7 +32,6 @@ type
         static procedure SetRoute(newroute: route_enum) := current_route := newroute;
         static function GetRoute(): route_enum := current_route;
     end;// static class end
-// type end
 {$ENDREGION}
 
 {$REGION глобальные_инстансы}
@@ -1314,7 +1312,8 @@ end;
 
 procedure MAIN;
 begin
-    if not STARTUP('СИМУЛЯТОР ШОБУНЕНА', VERSION) then exit;
+    Console.Title := 'СИМУЛЯТОР ШОБУНЕНА ' + VERSION.ToLower; 
+    
     {$IFDEF DOOBUG}
     writeln('DEBUG MODE');
     Console.Title += ' [DEBUG MODE]';
@@ -1347,6 +1346,6 @@ begin
     try
         MAIN();
     except
-        on _ex_: Exception do Puke(_ex_);
+        on _ex_: Exception do Catch(_ex_);
     end;
 end.

@@ -65,7 +65,7 @@ procedure WriteEqualsLine;
 /// writeln дважды
 procedure WritelnX2;
 /// разбиение текста на строки чтобы он вписывался в доступную ширину
-function WordWrap(str: string; width: integer; separator: string := NewLine): string;
+function WordWrap(const str: string; width: integer; separator: string := NewLine): string;
 /// случайный 50% шанс на возврат a или b
 function FiftyFifty<T>(a, b: T): T;
 /// сборка мусора вручную
@@ -75,9 +75,7 @@ function ReadCmd(prompt: string := ''): string;
 /// получить строку текста из встроенного файла ресурсов
 function TextFromResourceFile(const resource_name: string): string;
 /// обработчик исключений
-procedure Puke(ex: Exception);
-/// успешна ли инициализация перед запуском программы
-function STARTUP(prog_name: string; prog_version: string): boolean;
+procedure Catch(const ex: Exception);
 
 
 
@@ -172,7 +170,7 @@ end;
 
 procedure WritelnX2 := writeln(NewLine);
 
-function WordWrap(str: string; width: integer; separator: string): string;
+function WordWrap(const str: string; width: integer; separator: string): string;
 begin
     if NilOrEmpty(str) or (width <= 0) then
     begin
@@ -287,61 +285,7 @@ begin
     prompt := nil;
 end;
 
-function STARTUP(prog_name, prog_version: string): boolean;
-begin
-    Result := False;
-    if NilOrEmpty(prog_version) then prog_version := #8;
-    if Console.IsOutputRedirected then
-    begin
-        println('[', prog_name, prog_version, ']');
-        writeln('Программа запущена не в консольном окне. Shift+F9?');
-        exit;
-    end;
-    writeln('Загрузка...');
-    if IsUnix then
-    begin
-        TxtClr(Color.Red);
-        writeln('Программа запущена не на операционной системе Windows.');
-        TxtClr(Color.Cyan);
-        writeln('Всё равно продолжить? (Y/N)');
-        if not YN then exit;
-        _Log.WarnedUnix := True;
-    end;
-    BgClr(Color.Black);
-    Console.Title := prog_name + ' ' + prog_version.ToLower;
-    try
-        if not IsUnix then Console.InputEncoding := System.Text.Encoding.GetEncoding(1251);
-        Console.OutputEncoding := System.Text.Encoding.UTF8;
-    except
-        {ignore}
-    end;
-    if not (System.Globalization.CultureInfo.CurrentUICulture.Name.IsMatch('RU|BY|KZ', RegexOptions.IgnoreCase)) then
-    begin
-        TxtClr(Color.Cyan);
-        writeln('This program is available only in Russian. Continue anyway? (Y/N)');
-        if not YN then exit;
-        _Log.WarnedLanguage := True;
-    end;
-    while (Console.LargestWindowWidth <= MIN_WIDTH) do
-    begin
-        _Log.WarnedWindowSize := True;
-        sleep(10);
-        TxtClr(Color.Red);
-        writeln('Ошибка: превышено максимальное значение размера окна.');
-        writeln('Возможно, размер шрифта консоли слишком большой.');
-        writeln('Кликните правой кнопкой мыши по заголовку окна, затем выберите "Свойства", перейдите на вкладку "Шрифт", уменьшите его размер и нажмите "ОК".');
-        ClrKeyBuffer;
-        ReadKey;
-        ClrScr;
-    end;
-    UPD_SCR_TMR := new MyTimers.Timer(3, UpdScr);
-    UPD_SCR_TMR.Enable;
-    UpdScr;
-    Randomize;
-    Result := True;
-end;
-
-procedure Puke(ex: Exception);
+procedure Catch(const ex: Exception);
 begin
     _Log.Log('!! ОШИБКА:');
     _Log.Log(TAB + ex.ToString);
@@ -364,7 +308,6 @@ begin
         sleep(1000);
         Anim.Next3;
     end;
-    ex := nil;
 end;
 
 function ComputeWithoutUpdScr<T>(func: () -> T): T;
@@ -441,18 +384,72 @@ begin
     end;
 end;
 
-initialization
+function STARTUP: boolean;
+begin
+    Result := False;
     foreach i: string in GetAllResourceNames do
     begin
         try
             ValidateResource(i);
         except
-            on ex: Exception do Puke(ex);
+            on ex: Exception do writeln(#7, '[!!!] ', ex.GetType, ': ', ex.Message);
         end;
         {$IFDEF DOOBUG}
         println('[DEBUG]', 'Подключен ресурс', i)
         {$ENDIF}
     end;
+    if Console.IsOutputRedirected then
+    begin
+        writeln('Программа запущена не в консольном окне. Shift+F9?');
+        exit;
+    end;
+    writeln('Загрузка...');
+    if IsUnix then
+    begin
+        TxtClr(Color.Red);
+        writeln('Программа запущена не на операционной системе Windows.');
+        TxtClr(Color.Cyan);
+        writeln('Всё равно продолжить? (Y/N)');
+        if not YN then exit;
+        _Log.WarnedUnix := True;
+    end;
+    BgClr(Color.Black);
+    try
+        if not IsUnix then Console.InputEncoding := System.Text.Encoding.GetEncoding(1251);
+        Console.OutputEncoding := System.Text.Encoding.UTF8;
+    except
+        {ignore}
+    end;
+    if not (System.Globalization.CultureInfo.CurrentUICulture.Name.IsMatch('RU|BY|KZ', RegexOptions.IgnoreCase)) then
+    begin
+        TxtClr(Color.Cyan);
+        writeln('This program is available only in Russian. Continue anyway? (Y/N)');
+        if not YN then exit;
+        _Log.WarnedLanguage := True;
+    end;
+    while (Console.LargestWindowWidth <= MIN_WIDTH) do
+    begin
+        _Log.WarnedWindowSize := True;
+        sleep(10);
+        TxtClr(Color.Red);
+        writeln('Ошибка: превышено максимальное значение размера окна.');
+        writeln('Возможно, размер шрифта консоли слишком большой.');
+        writeln('Кликните правой кнопкой мыши по заголовку окна, затем выберите "Свойства", перейдите на вкладку "Шрифт", уменьшите его размер и нажмите "ОК".');
+        ClrKeyBuffer;
+        ReadKey;
+        ClrScr;
+    end;
+    UPD_SCR_TMR := new MyTimers.Timer(3, UpdScr);
+    UPD_SCR_TMR.Enable;
+    UpdScr;
+    Randomize;
+    Result := True;
+end;
+
+
+
+initialization
+    if not STARTUP then Halt(0);
 
 finalization
     if not Console.IsOutputRedirected then _Log.Log('=== стоп');
