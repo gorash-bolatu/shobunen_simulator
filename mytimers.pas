@@ -4,12 +4,16 @@ unit MyTimers;
 interface
 
 type
+    /// оболочка для System.Timers.Timer
     Timer = class
     private
         _tmr: System.Timers.Timer;
     public
+        /// приостановить таймер
         procedure Disable;
+        /// запустить/возобновить таймер
         procedure Enable;
+        /// таймер, выполняющий proc() каждые period мс
         constructor Create(period: real; proc: procedure);
         destructor Destroy;
     end;

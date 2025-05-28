@@ -3,8 +3,11 @@ unit Menu;
 
 interface
 
+/// загрузить элемент в будущее меню выбора
 procedure Load(element: string);
+/// выгрузить элементы и выбрать строку из меню
 function UnloadSelect: string;
+/// выбрать строку из меню выбора из вариантов options
 function FastSelect(params options: array of string): string;
 
 

@@ -4,7 +4,7 @@ interface
 
 type
     Achievement = class
-    private
+    protected
         fName, fDesc, fWalkthrough: string;
         fAchieved: boolean;
     public

@@ -2,13 +2,21 @@
 
 interface
 
+/// вывести горизонтальную строку и вернуть курсор назад
 procedure Text(const strg: string);
+/// вывести вертикальную строку и вернуть курсор назад
 procedure TextVert(const strg: string);
+/// вывести горизонтальную строку и вернуть курсор назад
 procedure Ascii(const strg: string);
+/// вывести спрайт из массива строк и вернуть курсор назад
 procedure Ascii(params arstrg: array of string);
+/// вывести строку пробелов и вернуть курсор назад
 procedure EraseLine(width: byte);
+/// вывести спрайт из пробелов и вернуть курсор назад
 procedure Erase(width, height: byte);
+/// вывести прямоугольник из box-drawing символов
 procedure Box(width, height: byte);
+/// вывести сплэш а-ля "Objection!"
 procedure ObjectionSplash(const message: string);
 
 implementation
