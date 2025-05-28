@@ -222,7 +222,7 @@ var
                         texted_trip := True;
                         if not Route.TextedRoma then writeln('Ты договорился встретиться с Трипом у гаражей.');
                     end;
-                'ROMA':
+                'ROMA', 'ROMA_ROMA':
                     if Route.TextedRoma then writeln('Ты уже писал Роме!') else
                     begin
                         Chat.Name := ('Рома Кафератор');
@@ -249,7 +249,7 @@ var
                         writeln('Ты договорился пойти с Ромой на "тусу" на стоянке.');
                         if tried_texting_rita then writeln('И кстати, Рита тем временем снова появилась в сети!');
                     end;
-                'RITA':
+                'RITA', 'RITA_RITA':
                     if Route.TextedRita then writeln('Ты уже писал Рите!')
                     else if Route.TextedRoma then
                     begin
@@ -606,7 +606,7 @@ begin
     ClrKeyBuffer;
     while True do
     begin// while begin
-        CMDRES := ReadCmd;
+        CMDRES := ReadCmd.Replace('тьюб', 'туб');
         case CMDRES of // case begin
             {-} 'CHECK':
                 begin

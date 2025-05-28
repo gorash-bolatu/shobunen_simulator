@@ -274,7 +274,9 @@ begin
                 end;
         end;
         if (rnds.Count > batch.Length) then
-            repeat rnds.Remove(rnds.ElementAt(Random(rnds.Count))) until (rnds.Count = batch.Length)
+            repeat
+                rnds.Remove(rnds.ElementAt(Random(rnds.Count)))
+            until (rnds.Count = batch.Length)
         else
             while (rnds.Count < batch.Length) do rnds.Add(Random(range.Low, range.High));
         for var j: byte := 0 to (batch.Length - 1) do
