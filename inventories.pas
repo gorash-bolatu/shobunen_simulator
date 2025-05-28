@@ -51,7 +51,7 @@ implementation
 uses Procs, Tutorial;
 
 var
-    ListOfAllInvs: List<Inventory> := new List<Inventory>;
+    ListOfAll: List<Inventory> := new List<Inventory>;
 
 procedure Inventory.Use := Active := self;
 
@@ -105,7 +105,7 @@ begin
     else foreach s: string in self.GetNames do writeln('=== ' + s);
 end;
 
-constructor Inventory.Create := ListOfAllInvs.Add(self);
+constructor Inventory.Create := ListOfAll.Add(self);
 
 destructor Inventory.Destroy;
 begin
@@ -129,9 +129,9 @@ finalization
         Active.Destroy;
         Active := nil;
     end;
-    if (ListOfAllInvs = nil) then exit;
-    foreach i: Inventory in ListOfAllInvs do i.Destroy;
-    ListOfAllInvs.Clear;
-    ListOfAllInvs := nil;
+    if (ListOfAll = nil) then exit;
+    foreach i: Inventory in ListOfAll do i.Destroy;
+    ListOfAll.Clear;
+    ListOfAll := nil;
 
 end. 
