@@ -1,7 +1,14 @@
 ﻿{$DEFINE DOOBUG} // todo
-{$REFERENCE LightJson.dll}
+{$REFERENCE LightJson.dll} // https://github.com/MarcosLopezC/LightJson
 {$RESOURCE parse.json}
 unit Parser;
+
+interface
+
+/// парсить строку согласно parse.json
+function ParseCmd(const s: string): string;
+
+implementation
 
 // структура parse.json:
 //[
@@ -27,7 +34,9 @@ begin
     var words: List<string> := new List<string>;
     foreach token: string in s.Split do
         foreach entry: LightJson.JsonValue in json_arr do
-            if entry['from'].AsJsonArray.Contains(token) then
+            if (entry['from'].IsJsonArray
+            ? entry['from'].AsJsonArray.Contains(token)
+            : entry['from'].AsString.Equals(token)) then
             begin
                 words.Add(entry['to'].AsString);
                 break;
@@ -37,15 +46,14 @@ begin
     words := nil;
 end;
 
-procedure ValidateEntry(const entry: LightJson.JsonValue);
+function ValidateEntry(const entry: LightJson.JsonValue): boolean;
 begin
-    if (entry.IsNull or not entry.IsJsonObject) then
-        raise new LightJson.Serialization.JsonParseException;
+    Result := False;
+    if (entry.IsNull or not entry.IsJsonObject) then exit;
     var obj: LightJson.JsonObject := entry.AsJsonObject;
-    if not (obj.ContainsKey('from') and obj.ContainsKey('to')) then
-        raise new LightJson.Serialization.JsonParseException;
-    if not (obj['from'].IsJsonArray and obj['to'].IsString) then
-        raise new LightJson.Serialization.JsonParseException;
+    if not (obj.ContainsKey('from') and obj.ContainsKey('to')) then exit;
+    if not ((obj['from'].IsJsonArray or obj['from'].IsString) and obj['to'].IsString) then exit;
+    Result := True;
 end;
 
 initialization
@@ -55,7 +63,8 @@ initialization
     print('[DEBUG]', 'Проверка parse.json...');
     var watch := new Stopwatch;
     watch.Start;
-    foreach i: LightJson.JsonValue in json_arr do ValidateEntry(i);
+    foreach i: LightJson.JsonValue in json_arr do
+        if not ValidateEntry(i) then raise new LightJson.Serialization.JsonParseException;;
     watch.Stop;
     writeln('ok ', watch.ElapsedMilliseconds, 'ms');
     watch := nil;
