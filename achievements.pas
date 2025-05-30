@@ -4,15 +4,23 @@ interface
 
 type
     Achievement = class
-    protected
-        fName, fDesc, fWalkthrough: string;
+    private
+        /// имя достижения
+        fName: string;
+        /// короткое описание достижения
+        fDesc: string;
+        /// способ получения достижения (прохождение)
+        fWalkthrough: string;
+        /// получено ли достижение
         fAchieved: boolean;
     public
+        /// получить достижение
         procedure Achieve;
         constructor Create(name, description: string; walkthrough: string := nil);
         destructor Destroy;
     end;
 
+/// отобразить все достижения в консоли
 procedure DisplayAll;
 function DebugString: string;
 
@@ -75,7 +83,7 @@ begin
         begin
             foreach ach: Achievement in ListOfAll.Where(q -> not q.fAchieved) do
             begin
-                if ach.fName.Contains('ОРА') then continue; // todo раскомментить когда будет рут трипа
+                if ach.fName.Contains('ОРА') then continue; // todo убрать когда будет рут трипа
                 TxtClr(Color.Cyan);
                 writeln(TAB, '} ', ach.fName);
                 TxtClr(Color.DarkCyan);
