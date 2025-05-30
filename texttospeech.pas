@@ -24,11 +24,11 @@ var
 
 function IsSpeaking: boolean := (synth.State = System.Speech.Synthesis.SynthesizerState.Speaking);
 
-function IsRus(const tts_voice: System.Speech.Synthesis.VoiceInfo): boolean :=
-tts_voice.Culture.Name.IsMatch('RU', RegexOptions.IgnoreCase);
+function IsRus(Self: InstalledVoice): boolean; extensionmethod :=
+Self.VoiceInfo.Culture.Name.IsMatch('RU', RegexOptions.IgnoreCase);
 
-function IsFemale(const tts_voice: System.Speech.Synthesis.VoiceInfo): boolean :=
-(tts_voice.Gender = System.Speech.Synthesis.VoiceGender.Female);
+function IsMale(Self: InstalledVoice): boolean; extensionmethod :=
+Self.VoiceInfo.Gender = System.Speech.Synthesis.VoiceGender.Male;
 
 procedure Fail(const ard: string; const brd: string; setup: boolean);
 // todo когда не будет логов, можно убрать и везде заменить на Dispose;
@@ -101,41 +101,25 @@ begin
 end;
 
 procedure Init;
-var
-    clr_scr_tmr: MyTimers.Timer;
-    voices: System.Collections.ObjectModel.ReadOnlyCollection<InstalledVoice>;
 begin
     DO_TTS := False;
+    var clr_scr_tmr: MyTimers.Timer;
     try
         try
             clr_scr_tmr := new MyTimers.Timer(1, ClrScr); // стирает странные ошибки типа "Untested Windows version detected"
             clr_scr_tmr.Enable;
             synth := new System.Speech.Synthesis.SpeechSynthesizer;
-            synth.Rate := 3;
+            var voices := synth.GetInstalledVoices;
+            var voices_ru := voices.Where(q -> q.IsRus);
+            var selected_voice: InstalledVoice := voices_ru.FirstOrDefault(q -> q.IsMale);
+            if (selected_voice = nil) then selected_voice := voices_ru.First();
+            if (selected_voice = nil) then exit;
+            selected_voice.Enabled := True;
+            synth.SelectVoice(selected_voice.VoiceInfo.Name);
             synth.SetOutputToDefaultAudioDevice;
+            synth.Rate := 3;
             synth.Volume := 100;
-            voices := synth.GetInstalledVoices;
-            if (voices.Count = 0) then
-                raise new System.InvalidOperationException('НЕ НАЙДЕНО УСТАНОВЛЕННЫХ ГОЛОСОВ'); // обработается xrd
-            // найти русскую говорилку:
-            foreach v: InstalledVoice in voices do
-                if IsRus(v.VoiceInfo) then
-                begin
-                    v.Enabled := True;
-                    synth.SelectVoice(v.VoiceInfo.Name);
-                    DO_TTS := True;
-                    break
-                end;
-            // если голос женский, попробовать найти русскую говорилку с мужским голосом:
-            // (можно было бы использовать SelectVoiceByHints но эта хрень не работает)
-            if DO_TTS and IsFemale(synth.Voice) then
-                foreach l: InstalledVoice in synth.GetInstalledVoices.Where(q -> IsRus(q.VoiceInfo)) do
-                    if not IsFemale(l.VoiceInfo) then
-                    begin
-                        l.Enabled := True;
-                        synth.SelectVoice(l.VoiceInfo.Name);
-                        break
-                    end;
+            DO_TTS := True;
             _Log.Log($'=== tts: {synth.Voice.Name}, {synth.Voice.Culture}, {synth.Voice.Gender}, {synth.Voice.Age}, "{synth.Voice.Description}"');
         except
             on xrd: Exception do Fail(xrd.GetType.ToString, xrd.Message, True);
@@ -147,7 +131,6 @@ begin
             clr_scr_tmr.Destroy;
             clr_scr_tmr := nil;
         end;
-        voices := nil;
         CollectGarbage;
     end;
 end;
