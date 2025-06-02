@@ -19,7 +19,7 @@
     <Item Type="SourceFile" Name="texttospeech.pas" Path="texttospeech.pas" />
     <Item Type="SourceFile" Name="tutorial.pas" Path="tutorial.pas" />
     <Item Type="SourceFile" Name="matrix.pas" Path="matrix.pas" />
-    <Item Type="SourceFile" Name="inventories.pas" Path="inventories.pas" />
+    <Item Type="SourceFile" Name="inventory.pas" Path="inventory.pas" />
     <Item Type="Reference" AssemblyName="System" FullAssemblyName="System.dll" />
   </Items>
 </Project>
