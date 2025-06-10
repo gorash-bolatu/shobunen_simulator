@@ -1188,6 +1188,7 @@ end;
 var
     
     sFork := new PlayableScene(PART4, 'драка с костылём');
+    // todo переделать в ForkScene
     
     sStart := (new PlayableScene(PART1, 'комната')).Linkup(
     new PlayableScene(PART2, 'подъезд'),
@@ -1198,57 +1199,52 @@ var
 
 {$REGION main}
 function GAMELOOP: boolean;
-var
-    current_scene: Scene;
 begin
     Result := True;
     Inventory.Reset;
     Route.SetRoute(Solo);
-    current_scene := sStart;
-    repeat
-        if (current_scene is PlayableScene) then
+    foreach current_scene: Scene in sStart.Scenes do
+    begin
+        // части просто проходимые без геймоверов:
+        if (current_scene is Cutscene) then current_scene.Run()
         // части с возможностью геймовера:
-        begin
-            _Log.Log('=== часть: ' + current_scene.name);
+        else begin
+            _Log.Log('=== часть: ' + current_scene.Name);
             Inventory.Save;
-            var passed: boolean;
-            repeat
-                Inventory.Load;
-                passed := (current_scene as PlayableScene).Passed;
-                if passed then break else
+            while not current_scene.Passed() do
+            begin
+                achGameOver.Achieve;
+                _Log.Log('=== геймовер');
+                Anim.Next3;
+                TxtClr(Color.Red);
+                writeln('G A M E   O V E R');
+                BeepWait(700, 300);
+                BeepWait(600, 300);
+                BeepWait(450, 500);
+                writeln;
+                TxtClr(Color.Green);
+                writeln('Вернуться на последнюю контрольную точку? (Y/N)');
+                writeln;
+                Cursor.GoTop(-1);
+                if YN then
                 begin
-                    achGameOver.Achieve;
-                    _Log.Log('=== геймовер');
+                    _Log.Log('= ОТКАТ');
+                    writeln;
+                    WriteEqualsLine;
                     Anim.Next3;
-                    TxtClr(Color.Red);
-                    writeln('G A M E   O V E R');
-                    BeepWait(700, 300);
-                    BeepWait(600, 300);
-                    BeepWait(450, 500);
-                    writeln;
-                    TxtClr(Color.Green);
-                    writeln('Вернуться на последнюю контрольную точку? (Y/N)');
-                    writeln;
-                    Cursor.GoTop(-1);
+                    Inventory.Load;
+                end
+                else begin
+                    write('Начать заново? (Y/N)');
                     if YN then
                     begin
-                        _Log.Log('= ОТКАТ');
-                        writeln;
-                        WriteEqualsLine;
-                        Anim.Next3;
-                    end
-                    else begin
-                        write('Начать заново? (Y/N)');
-                        if YN then
-                        begin
-                            Result := False;
-                            _Log.Log('=== РЕСТАРТ');
-                            TITLESCREEN;
-                        end;
-                        exit;
+                        Result := False;
+                        _Log.Log('=== РЕСТАРТ');
+                        TITLESCREEN;
                     end;
+                    exit;
                 end;
-            until False; // repeat end
+            end;
             writeln;
             Anim.Next3;
             TxtClr(Color.Green);
@@ -1256,22 +1252,9 @@ begin
             Anim.Next1;
             writelnx2;
             Console.Beep;
-            _Log.Log('=== чекпоинт: ' + current_scene.name);
-            
-        end
-        // части просто проходимые без геймоверов:
-        else (current_scene as Cutscene).Run;
-        //        if (current_scene = sFork) then
-        //            case Route.GetRoute of
-        //                {-} route_enum.Solo: current_scene := sSoloStart;
-        //                {-} route_enum.Rita: current_scene := sRitaStart;
-        //                {-} route_enum.Trip: current_scene := sTripStart;
-        //                {-} route_enum.Solo: current_scene := sRomaStart;
-        //            end; // case end
-        // else 
-        // todo раскомментить когда будут руты
-        current_scene := current_scene.next;
-    until (current_scene = nil);
+            _Log.Log('=== чекпоинт: ' + current_scene.Name);
+        end;
+    end;
     TxtClr(Color.Cyan);
     writeln('<=== TO BE CONTINUED...');
     writeln;
