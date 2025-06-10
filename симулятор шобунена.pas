@@ -10,7 +10,7 @@ program shobu_sim;
 {$STRING_NULLBASED-}
 
 uses Procs, Scenes, Inventory, Anim, Cursor, Achievements, Chat;
-uses Plot_Prologue, Routes, Achs, Matrix;
+uses Plot_Scenes, Routes, Achs;
 uses _Log;
 
 {$DEFINE DOOBUG} // todo
@@ -81,26 +81,13 @@ end;
 
 {$ENDREGION}
 
-{$REGION сцены}
-var
-    
-    sFork := new PlayableScene(PART4, 'драка с костылём');
-    // todo переделать в ForkScene
-    
-    sStart := (new PlayableScene(PART1, 'комната')).Linkup(
-    new PlayableScene(PART2, 'подъезд'),
-    new Cutscene(PART3, 'выход на улицу'),
-    sFork);
-
-{$ENDREGION}
-
-{$REGION main}
+{$REGION gameloop}
 function GAMELOOP: boolean;
 begin
     Result := True;
     Inventory.Reset;
     Route.SetRoute(route_enum.Solo);
-    foreach current_scene: Scene in sStart.Scenes do
+    foreach current_scene: Scene in SCENES do
     begin
         // части просто проходимые без геймоверов:
         if (current_scene is Cutscene) then current_scene.Run()
@@ -135,7 +122,6 @@ begin
                     write('Начать заново? (Y/N)');
                     if YN then
                     begin
-                        Result := False;
                         _Log.Log('=== РЕСТАРТ');
                         TITLESCREEN;
                     end;
@@ -171,7 +157,6 @@ begin
     if YN then
     begin
         _Log.Log('=== ФУЛЛ РЕСТАРТ');
-        Result := False;
         
         ClrScr;
         TxtClr(Color.Green);
@@ -182,44 +167,39 @@ begin
         sleep(500);
         // todo убрать и заменить на titlescreen
         
-    end;
-end;
-
-procedure MAIN;
-begin
-    Console.Title := 'СИМУЛЯТОР ШОБУНЕНА ' + VERSION.ToLower; 
-    
-    {$IFDEF DOOBUG}
-    writeln('DEBUG MODE');
-    Console.Title += ' [DEBUG MODE]';
-    WriteEqualsLine;
-    Chat.Skip := True;
-    {$ELSE}
-    TITLESCREEN;
-    {$ENDIF}
-    
-    {$IFDEF DOOBUG}
-    _Log.Init(VERSION, True);
-    {$ELSE}
-    _Log.Init(VERSION, False);
-    {$ENDIF}
-    
-    {$IFNDEF DOOBUG}
-    WHATSNEW;
-    {$ENDIF}
-    
-    var ended_game: boolean;
-    repeat
-        ended_game := GAMELOOP;
-    until ended_game;
-    writeln;
+    end
+    else Result := False;
 end;
 {$ENDREGION}
 
+{$REGION main}
 begin
     try
-        MAIN();
+        Console.Title := 'СИМУЛЯТОР ШОБУНЕНА ' + VERSION.ToLower; 
+        
+        {$IFDEF DOOBUG}
+        writeln('DEBUG MODE');
+        Console.Title += ' [DEBUG MODE]';
+        WriteEqualsLine;
+        Chat.Skip := True;
+        {$ELSE}
+        TITLESCREEN;
+        {$ENDIF}
+        
+        {$IFDEF DOOBUG}
+        _Log.Init(VERSION, True);
+        {$ELSE}
+        _Log.Init(VERSION, False);
+        {$ENDIF}
+        
+        {$IFNDEF DOOBUG}
+        WHATSNEW;
+        {$ENDIF}
+        
+        while GAMELOOP() do;
+        writeln;
     except
         on _ex_: Exception do Catch(_ex_);
     end;
 end.
+{$ENDREGION}

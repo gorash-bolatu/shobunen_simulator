@@ -25,6 +25,7 @@
     <Item Type="SourceFile" Name="items.pas" Path="items.pas" />
     <Item Type="SourceFile" Name="achs.pas" Path="achs.pas" />
     <Item Type="SourceFile" Name="resources.pas" Path="resources.pas" />
+    <Item Type="SourceFile" Name="plot_scenes.pas" Path="plot_scenes.pas" />
     <Item Type="Reference" AssemblyName="System" FullAssemblyName="System.dll" />
   </Items>
 </Project>
