@@ -81,6 +81,7 @@ begin
         writeln;
         if YN then
         begin
+            var top: integer := Cursor.Top;
             foreach ach: Achievement in ListOfAll.Where(q -> not q.fAchieved) do
             begin
                 if ach.fName.Contains('ОРА') then continue; // todo убрать когда будет рут трипа
@@ -96,7 +97,12 @@ begin
                     var w: integer := MIN_WIDTH - Cursor.Left;
                     writeln(WordWrap(ach.fWalkthrough, w, NewLine + TAB));
                 end;
-                sleep(300);
+                if (Cursor.Top - top > Console.WindowHeight div 2) then
+                begin
+                    TxtClr(Color.Yellow);
+                    Anim.Next1;
+                    top := Cursor.Top;
+                end;
             end;
             writeln;
         end;
@@ -106,7 +112,7 @@ begin
         writeln;
     end;
     Cursor.GoTop(-1);
-    DoWithoutUpdScr(Anim.Next3);
+    Anim.Next3;
 end;
 
 initialization
