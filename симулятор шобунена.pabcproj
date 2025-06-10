@@ -20,6 +20,10 @@
     <Item Type="SourceFile" Name="tutorial.pas" Path="tutorial.pas" />
     <Item Type="SourceFile" Name="matrix.pas" Path="matrix.pas" />
     <Item Type="SourceFile" Name="inventory.pas" Path="inventory.pas" />
+    <Item Type="SourceFile" Name="plot_prologue.pas" Path="plot_prologue.pas" />
+    <Item Type="SourceFile" Name="routes.pas" Path="routes.pas" />
+    <Item Type="SourceFile" Name="items.pas" Path="items.pas" />
+    <Item Type="SourceFile" Name="achs.pas" Path="achs.pas" />
     <Item Type="Reference" AssemblyName="System" FullAssemblyName="System.dll" />
   </Items>
 </Project>
