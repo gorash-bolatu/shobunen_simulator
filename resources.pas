@@ -15,7 +15,7 @@ begin
     Result := System.Reflection.Assembly.GetExecutingAssembly.GetManifestResourceStream(resource_name);
     {
     if (Result = nil) then
-        raise new System.Resources.MissingManifestResourceException('НЕТ РЕСУРСА: ' + resname);
+    raise new System.Resources.MissingManifestResourceException('НЕТ РЕСУРСА: ' + resname);
     }
 end;
 
@@ -74,7 +74,16 @@ begin
     end;
 end;
 
+function GetRefAsms := System.Reflection.Assembly.GetExecutingAssembly.GetReferencedAssemblies;
+
+
+
 initialization
+    {$IFDEF DOOBUG}
+    foreach p: System.Reflection.AssemblyName in GetRefAsms do
+        if not (p.Name in ['mscorlib', 'System', 'System.Numerics', 'System.Core']) then
+            println('[DEBUG]', 'Подключена сборка', p.Name, p.Version);
+    {$ENDIF}
     foreach i: string in GetAllResourceNames do
     begin
         try

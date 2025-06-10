@@ -64,9 +64,9 @@ initialization
     var watch := new Stopwatch;
     watch.Start;
     foreach i: LightJson.JsonValue in json_arr do
-        if not IsValidEntry(i) then raise new LightJson.Serialization.JsonParseException;;
+        if not IsValidEntry(i) then raise new LightJson.Serialization.JsonParseException;
     watch.Stop;
-    writeln('ok ', watch.ElapsedMilliseconds, 'ms');
+    println('ok', watch.Elapsed.TotalMilliseconds, 'ms');
     watch := nil;
     {$ENDIF}
 
