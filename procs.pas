@@ -1,4 +1,5 @@
 ﻿{$DEFINE DOOBUG} // todo
+{$REFERENCE System.Windows.Forms.dll}
 unit Procs;
 
 interface
@@ -13,6 +14,7 @@ type
         Тританити, Мотвеус, Агент_Сергеев, Меромавинген);
 
 const
+    VERSION = System.Windows.Forms.Application.ProductVersion;
     TAB = #9;
     MIN_WIDTH: byte = 100;
     MIN_HEIGHT: byte = 20;
@@ -72,6 +74,10 @@ function FiftyFifty<T>(a, b: T): T;
 procedure CollectGarbage;
 /// ввод + парсинг команды
 function ReadCmd(prompt: string := ''): string;
+///
+procedure EscapeRoom(proc: procedure);
+///
+procedure SLEEPMODE;
 /// получить строку текста из встроенного файла ресурсов
 function TextFromResourceFile(const resource_name: string): string;
 /// обработчик исключений
@@ -445,6 +451,28 @@ begin
     Randomize;
     Result := True;
 end;
+
+procedure EscapeRoom(proc: procedure);
+begin
+    Anim.Next3;
+    TxtClr(Color.Yellow);
+    writeln('=== SEEK A WAY OUT! ===');
+    writeln;
+    BeepWait(580, 230);
+    BeepWait(460, 230);
+    BeepWait(280, 230);
+    BeepWait(300, 380);
+    TxtClr(Color.White);
+    proc();
+    TxtClr(Color.Yellow);
+    writeln('=== YOU FOUND IT ===');
+    BeepWait(300, 200);
+    Anim.Next3;
+end;
+
+procedure SLEEPMODE :=
+System.Windows.Forms.Application.SetSuspendState(
+    System.Windows.Forms.PowerState.Suspend, True, False);
 
 
 

@@ -1,9 +1,8 @@
-﻿{$REFERENCE System.Windows.Forms.dll}
-unit Matrix;
+﻿unit Matrix;
 
 interface
 
-procedure Mtrx(const ver: string; const ver_nth: string);
+procedure Mtrx;
 
 implementation
 
@@ -59,7 +58,7 @@ begin
     end
 end;
 
-procedure Mtrx(const ver: string; const ver_nth: string);
+procedure Mtrx;
 begin
     TxtClr(Color.Green);
     DoWithoutUpdScr(PrintNumbers);
@@ -172,7 +171,7 @@ begin
     TextToSpeech.Architect(
                    'Симулятор намного старше, чем ты думаешь',
                    'Я предпочитаю лимитировать эпоху Симулятора очередным билдом',
-                   $'И в таком случае, это уже {ver_nth} версия, "{ver}"',
+                   $'И в таком случае, это уже чёрт знает какая версия... Называется "{VERSION}".',
                    'Первый Симулятор, который я создал, был произведением искусства. Совершенством',
                    'Его триумф сравним лишь с его монументальным крахом',
                    'Неизбежность этого краха является следствием убогости языка PascalABC.NET');
@@ -213,7 +212,7 @@ begin
         TextToSpeech.ArchitectFinal;
         try
             try
-                System.Windows.Forms.Application.SetSuspendState(System.Windows.Forms.PowerState.Suspend, True, False);
+                SLEEPMODE;
                 _Log.Log('=== спящий режим');
             except
                 on excp: Exception do
