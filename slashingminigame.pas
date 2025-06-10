@@ -8,7 +8,8 @@ uses Procs;
 /// # - строки правды, % - блокирующие
 procedure Load(params lines: array of string);
 
-function Game(opponent: Procs.actor_enum): boolean;
+function Game(opponent: actor_enum): boolean;
+
 
 
 implementation
@@ -16,16 +17,40 @@ implementation
 uses MyTimers, Cursor, Draw, Anim;
 uses _Log;
 
+type
+    /// Cursor and Text Color State
+    CATCS = static class
+    private
+        static l, t: integer;
+        static c: Color;
+    public
+        /// загрузить сохранённую позицию курсора и цвет текста
+        static procedure Restore;
+        begin
+            Cursor.SetLeft(l);
+            Cursor.SetTop(t);
+            TxtClr(c);
+        end;
+        /// сохранить текущую позицию курсора и цвет текста
+        static procedure Save;
+        begin
+            l := Cursor.Left;
+            t := Cursor.Top;
+            c := CurClr;
+        end;
+    end;
+// type end
+
 const
     UPD_HP_INTERVAL: word = 500;
     ATTACK_COOLDOWN: word = 170;
-    BOX_WIDTH: byte = 53;
+    BOX_WIDTH: word = 53;
+    BOX_HEIGHT: word = word(Round(BOX_WIDTH / 3.55));
     HORIZ_PADDING: byte = 4;
     LOW_HP_ZONE: byte = 9;
 
 var
     health_cap: byte;
-    box_height: byte := Round(box_width / 3.55);
     loaded: List<array of string>;
     health: shortint;
     health_line: integer;
@@ -39,23 +64,21 @@ function HealthInBounds: boolean := (health in 3..(health_cap - 1));
 
 procedure UpdateHealth := if (health > health_cap) then health := health_cap else if (health > 0) then health -= 1;
 
-procedure FlashHealthbar(win: boolean);
+procedure FlashHealthbar(won: boolean);
 begin
-    var ret_t: (integer, integer, Color) := (Cursor.Left, Cursor.Top, CurClr);
+    CATCS.Save;
     TxtClr(Color.Gray);
     Cursor.SetTop(health_line);
     Cursor.SetLeft(6);
     for var i: byte := 0 to 10 do
     begin
-        if win then BgClr((i mod 2 = 0) ? Color.DarkGreen : Color.Green)
+        if won then BgClr((i mod 2 = 0) ? Color.DarkGreen : Color.Green)
         else BgClr((i mod 2 = 0) ? Color.DarkRed : Color.Red);
         Draw.Text(' ' * health_cap);
         sleep(100);
     end;
     BgClr(Color.Black);
-    Cursor.SetLeft(ret_t.Item1);
-    Cursor.SetTop(ret_t.Item2);
-    TxtClr(ret_t.Item3);
+    CATCS.Restore;
 end;
 
 procedure DrawHealthbar;
@@ -65,7 +88,7 @@ begin
         interrupt := True;
         exit;
     end;
-    var ret_t: (integer, integer, Color) := (Cursor.Left, Cursor.Top, CurClr);
+    CATCS.Save;
     var h: shortint := health;
     Cursor.SetTop(health_line);
     Cursor.SetLeft(6);
@@ -77,27 +100,25 @@ begin
     BgClr(Color.Gray);
     while (Cursor.Left < 6 + health_cap) do write(' ');
     BgClr(Color.Black);
-    Cursor.SetLeft(ret_t.Item1);
-    Cursor.SetTop(ret_t.Item2);
-    TxtClr(ret_t.Item3);
+    CATCS.Restore;
 end;
 
 procedure RedBorderDamage;
 begin
     if (health < 2) then exit;
     BeepAsync(300, 100);
-    var ret_t: (integer, integer, Color) := (Cursor.Left, Cursor.Top, CurClr);
+    CATCS.Save;
     loop 2 do
         for var g: boolean := False to True do
         begin
             TxtClr(g ? Color.Gray : Color.Red);
-            Cursor.SetTop(health_line - box_height - 1);
+            Cursor.SetTop(health_line - BOX_HEIGHT - 1);
             Cursor.SetLeft(0);
             write('┌', '─' * BOX_WIDTH, '┐');
             Cursor.GoXY(-1, +1);
-            Draw.TextVert('│' * box_height);
+            Draw.TextVert('│' * BOX_HEIGHT);
             Cursor.SetLeft(0);
-            Draw.TextVert('│' * box_height);
+            Draw.TextVert('│' * BOX_HEIGHT);
             Cursor.SetTop(health_line - 1);
             write('├', '─' * BOX_WIDTH, '┤');
             writeln;
@@ -112,15 +133,14 @@ begin
                 sleep(20);
             end;
         end;
-    Cursor.SetLeft(ret_t.Item1);
-    Cursor.SetTop(ret_t.Item2);
-    TxtClr(ret_t.Item3);
+    CATCS.Restore;
     ClrKeyBuffer;
 end;
 
 function IsDirectionKey(k: Key): boolean :=
-k in [Key.LeftArrow, Key.RightArrow,
-        Key.UpArrow, Key.DownArrow, Key.W, Key.A, Key.S, Key.D, Key.NumPad2, Key.NumPad4, Key.NumPad6, Key.NumPad8];
+k in [Key.LeftArrow, Key.RightArrow, Key.UpArrow, Key.DownArrow,
+    Key.W, Key.A, Key.S, Key.D,
+    Key.NumPad2, Key.NumPad4, Key.NumPad6, Key.NumPad8];
 
 function ConvertKeyToDirection(k: Key): direction;
 begin
@@ -162,9 +182,9 @@ begin
     case textdir of
         direction.up, direction.down:
             begin
-                Cursor.SetTop(health_line - box_height);
+                Cursor.SetTop(health_line - BOX_HEIGHT);
                 Cursor.GoLeft(-1);
-                Draw.Erase(3, box_height - 1);
+                Draw.Erase(3, BOX_HEIGHT - 1);
             end;
         direction.right, direction.left:
             begin
@@ -248,17 +268,18 @@ begin
 end;
 
 procedure PlayBatch(const batch: array of string);
-var
-    curdir: direction;
-    rnds: HashSet<integer>;
+const
+    UP_BOUNDARY: integer = Cursor.Top;
+    DOWN_BOUNDARY: integer = UP_BOUNDARY + BOX_HEIGHT;
 begin
+    var curdir: direction;
+    if (batch.Max(q -> q.Length) < BOX_HEIGHT - 4)
+        then curdir := FiftyFifty(direction.up, direction.down)
+    else curdir := FiftyFifty(direction.left, direction.right);
+    var rnds: HashSet<integer>;
+    var range: IntRange;
     try
-        if (batch.Max(q -> q.Length) < box_height - 4) then curdir := FiftyFifty(direction.up, direction.down)
-        else curdir := FiftyFifty(direction.left, direction.right);
-        var up_boundary: integer := Cursor.Top;
-        var down_boundary: integer := up_boundary + box_height;
         rnds := new HashSet<integer>;
-        var range: IntRange;
         case curdir of
             direction.up, direction.down:
                 begin
@@ -289,9 +310,9 @@ begin
             rnds.Remove(r);
             var len: integer := batch[j].Length;
             case curdir of
-                direction.up: Cursor.SetTop(Random(up_boundary + 2 + len, down_boundary - 3));
+                direction.up: Cursor.SetTop(Random(UP_BOUNDARY + 2 + len, DOWN_BOUNDARY - 3));
                 direction.right: Cursor.SetLeft(Random(HORIZ_PADDING - 1, BOX_WIDTH - HORIZ_PADDING - len + 2));
-                direction.down: Cursor.SetTop(Random(up_boundary + 3, down_boundary - len - 2));
+                direction.down: Cursor.SetTop(Random(UP_BOUNDARY + 3, DOWN_BOUNDARY - len - 2));
                 direction.left: Cursor.SetLeft(Random(HORIZ_PADDING + len, BOX_WIDTH - HORIZ_PADDING));
             end;
             PlayLine(batch[j], curdir);
@@ -307,10 +328,6 @@ begin
                 direction.left: curdir := direction.right;
             end;
         end;
-        Cursor.SetTop(health_line - box_height);
-        Cursor.SetLeft(1);
-        if (HealthInBounds and not interrupt) then DrawHealthBar else FlashHealthbar(health > health_cap div 2);
-        Draw.Erase(BOX_WIDTH - 1, box_height - 1);
     finally
         if (rnds <> nil) then
         begin
@@ -318,6 +335,10 @@ begin
             rnds := nil;
         end;
     end;
+    Cursor.SetTop(health_line - BOX_HEIGHT);
+    Cursor.SetLeft(1);
+    if (HealthInBounds and not interrupt) then DrawHealthBar else FlashHealthbar(health > health_cap div 2);
+    Draw.Erase(BOX_WIDTH - 1, BOX_HEIGHT - 1);
 end;
 
 procedure Load(params lines: array of string);
@@ -330,9 +351,9 @@ begin
     if (lines.Length * 4 >= BOX_WIDTH) then
         raise new Exception('SLASHINGMINIGAME.LOAD(): СЛИШКОМ МНОГО ВЕРТ. СТРОК В'
                                                 + $' (МАКС {(BOX_WIDTH div 4) - 1} ПОЛУЧЕНО {lines.Length})');
-    if (lines.Length * 2 >= box_height) then
+    if (lines.Length * 2 >= BOX_HEIGHT) then
         raise new Exception('SLASHINGMINIGAME.LOAD(): СЛИШКОМ МНОГО ГОРИЗ. СТРОК'
-                                                + $' (МАКС {(box_height div 2) - 1} ПОЛУЧЕНО {lines.Length})');
+                                                + $' (МАКС {(BOX_HEIGHT div 2) - 1} ПОЛУЧЕНО {lines.Length})');
     if (lines.Max(q -> q.Length) > BOX_WIDTH - 6) then
         raise new Exception('SLASHINGMINIGAME.LOAD(): СТРОКА "' + lines.MaxBy(q -> q.Length)
                                                 + '" НЕ ВЛЕЗАЕТ ПРИ DIRECTION=left/right');
@@ -356,7 +377,7 @@ begin
         health := health_cap div 2;
         interrupt := False;
         ret := Cursor.Top;
-        Draw.Box(BOX_WIDTH, box_height - 1);
+        Draw.Box(BOX_WIDTH, BOX_HEIGHT - 1);
         Cursor.GoTop(-1);
         Draw.Box((6 + health_cap + enemy.Length), 1);
         Cursor.GoTop(-3);
@@ -392,7 +413,7 @@ begin
     Result := (health > 0);
     if Result then failed_attempts := 0 else failed_attempts += 1;
     Cursor.SetTop(ret);
-    ClearLines(box_height + 5, True);
+    ClearLines(BOX_HEIGHT + 5, True);
 end;
 
 end.
