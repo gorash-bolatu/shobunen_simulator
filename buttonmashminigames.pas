@@ -11,7 +11,7 @@ function JojoBig: boolean;
 
 implementation
 
-uses Procs, Draw, Cursor;
+uses Procs, Draw, Cursor, Resources;
 uses _Log;
 
 var

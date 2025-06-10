@@ -24,7 +24,7 @@ implementation
 //    ...
 //]
 
-uses Procs;
+uses Procs, Resources;
 
 var
     json_arr: LightJson.JsonArray;
@@ -46,7 +46,7 @@ begin
     words := nil;
 end;
 
-function ValidateEntry(const entry: LightJson.JsonValue): boolean;
+function IsValidEntry(const entry: LightJson.JsonValue): boolean;
 begin
     Result := False;
     if (entry.IsNull or not entry.IsJsonObject) then exit;
@@ -64,7 +64,7 @@ initialization
     var watch := new Stopwatch;
     watch.Start;
     foreach i: LightJson.JsonValue in json_arr do
-        if not ValidateEntry(i) then raise new LightJson.Serialization.JsonParseException;;
+        if not IsValidEntry(i) then raise new LightJson.Serialization.JsonParseException;;
     watch.Stop;
     writeln('ok ', watch.ElapsedMilliseconds, 'ms');
     watch := nil;
