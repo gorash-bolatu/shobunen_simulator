@@ -110,10 +110,11 @@ begin
             clr_scr_tmr.Enable;
             synth := new System.Speech.Synthesis.SpeechSynthesizer;
             var voices := synth.GetInstalledVoices;
-            var voices_ru := voices.Where(q -> q.IsRus);
+            var voices_ru := voices.&Where(q -> q.IsRus);
+            if not voices_ru.Any then exit;
             var selected_voice: InstalledVoice := voices_ru.FirstOrDefault(q -> q.IsMale);
-            if (selected_voice = nil) then selected_voice := voices_ru.First();
-            if (selected_voice = nil) then exit;
+            if (selected_voice = nil) then selected_voice := voices_ru.First;
+            if NilOrEmpty(selected_voice.VoiceInfo.Name) then exit;
             selected_voice.Enabled := True;
             synth.SelectVoice(selected_voice.VoiceInfo.Name);
             synth.SetOutputToDefaultAudioDevice;
