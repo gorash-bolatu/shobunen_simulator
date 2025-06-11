@@ -13,10 +13,10 @@ implementation
 function GetResourceStream(const resource_name: string): System.IO.Stream;
 begin
     Result := System.Reflection.Assembly.GetExecutingAssembly.GetManifestResourceStream(resource_name);
-    {
+    {$IFDEF DOOBUG}
     if (Result = nil) then
-    raise new System.Resources.MissingManifestResourceException('НЕТ РЕСУРСА: ' + resname);
-    }
+        raise new System.Resources.MissingManifestResourceException('НЕТ РЕСУРСА: ' + resource_name);
+    {$ENDIF}
 end;
 
 function TextFromResourceFile(const resource_name: string): string;
@@ -26,10 +26,6 @@ var
 begin
     try
         resource_stream := GetResourceStream(resource_name);
-        {
-        if (resource_stream = nil) then
-            raise new System.Resources.MissingManifestResourceException('НЕТ РЕСУРСА: ' + resname);
-        }
         mem_stream := new System.IO.MemoryStream;
         resource_stream.CopyTo(mem_stream);
         Result := System.Text.Encoding.UTF8.GetString(mem_stream.ToArray);

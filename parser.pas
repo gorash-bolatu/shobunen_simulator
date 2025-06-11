@@ -1,16 +1,20 @@
 ﻿{$DEFINE DOOBUG} // todo
 {$REFERENCE LightJson.dll} // https://github.com/MarcosLopezC/LightJson
-{$RESOURCE parse.json}
+{$RESOURCE parse_cmd.json}
 unit Parser;
 
 interface
 
-/// парсить строку согласно parse.json
+/// парсить строку согласно parse_cmd.json
 function ParseCmd(const s: string): string;
+/// парсить строку согласно parse_tts.json
+function ParseTts(const s: string): string;
+
+
 
 implementation
 
-// структура parse.json:
+// примерная структура json:
 //[
 //    {
 //        "to": "USE",
@@ -19,7 +23,7 @@ implementation
 //    },
 //    {
 //        "to": "JUMP",
-//        "from": ["прыгнуть"]
+//        "from": "прыгнуть"
 //    }
 //    ...
 //]
@@ -27,23 +31,40 @@ implementation
 uses Procs, Resources;
 
 var
-    json_arr: LightJson.JsonArray;
+    cmd_json, tts_json: LightJson.JsonArray;
 
 function ParseCmd(const s: string): string;
 begin
     var words: List<string> := new List<string>;
     foreach token: string in s.Split do
-        foreach entry: LightJson.JsonValue in json_arr do
-            if (entry['from'].IsJsonArray
-            ? entry['from'].AsJsonArray.Contains(token)
-            : entry['from'].AsString.Equals(token)) then
+        foreach entry: LightJson.JsonValue in cmd_json do
+        begin
+            var from: LightJson.JsonValue := entry.Item['from'];
+            if (from.IsJsonArray
+            ? from.AsJsonArray.Contains(token)
+            : from.AsString.Equals(token)) then
             begin
-                words.Add(entry['to'].AsString);
+                words.Add(entry.Item['to'].AsString);
                 break;
             end;
+        end;
     Result := string.Join('_', words);
     words.Clear;
     words := nil;
+end;
+
+function ParseTts(const s: string): string;
+begin
+    Result := s;
+    foreach entry: LightJson.JsonValue in tts_json do
+    begin
+        var t: string := entry.Item['to'].AsString;
+        var f: LightJson.JsonValue := entry.Item['from'];
+        if f.IsJsonArray then
+            foreach w: LightJson.JsonValue in f.AsJsonArray do
+                Result := Result.Replace(w.AsString, t)
+        else Result := Result.Replace(f.AsString, t);
+    end;
 end;
 
 function IsValidEntry(const entry: LightJson.JsonValue): boolean;
@@ -56,22 +77,29 @@ begin
     Result := True;
 end;
 
-initialization
-    json_arr := LightJson.JsonValue.Parse(TextFromResourceFile('parse.json')).AsJsonArray;
-    
+function FetchAndParse(const resource_name: string): LightJson.JsonArray;
+begin
+    Result := LightJson.JsonValue.Parse(TextFromResourceFile(resource_name)).AsJsonArray;
     {$IFDEF DOOBUG}
-    print('[DEBUG]', 'Проверка parse.json...');
+    print('[DEBUG]', 'Проверка', resource_name + '...');
     var watch := new Stopwatch;
     watch.Start;
-    foreach i: LightJson.JsonValue in json_arr do
+    foreach i: LightJson.JsonValue in Result do
         if not IsValidEntry(i) then raise new LightJson.Serialization.JsonParseException;
     watch.Stop;
     println('ok', watch.Elapsed.TotalMilliseconds, 'ms');
     watch := nil;
-    {$ENDIF}
+{$ENDIF}
+end;
+
+initialization
+    cmd_json := FetchAndParse('parse_cmd.json');
+    tts_json := FetchAndParse('parse_tts.json');
 
 finalization
-    json_arr.Clear;
-    json_arr := nil;
+    cmd_json.Clear;
+    cmd_json := nil;
+    tts_json.Clear;
+    tts_json := nil;
 
 end.

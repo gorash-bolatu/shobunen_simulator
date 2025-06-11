@@ -1,4 +1,5 @@
 ﻿{$REFERENCE System.Speech.dll}
+{$RESOURCE parse_tts.json}
 
 // TODO в релизе убрать все raise (там где про движок говорилки поменять все raise на Dispose)
 
@@ -13,7 +14,7 @@ procedure Init;
 
 implementation
 
-uses Procs, Cursor, Anim, MyTimers;
+uses Procs, Cursor, Anim, MyTimers, Parser;
 uses _Log;
 
 type
@@ -75,7 +76,7 @@ begin
     begin
         if DO_TTS then
             try
-                synth.SpeakAsync(ph.Replace('PascalABC.NET', 'паскаль а бэ цэ дот нэт').Replace('v', 'версия').Replace('узнаешь', 'у знаешь').Replace('...', ','));
+                synth.SpeakAsync(ParseTts(ph));
                 // ждать 800 мс пока говорилка не подгрузится:
                 System.Threading.SpinWait.SpinUntil(() -> IsSpeaking, 800);
                 // если говорилка за это время не подгрузилась:

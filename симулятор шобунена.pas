@@ -1,13 +1,12 @@
 ﻿// СИМУЛЯТОР ШОБУНЕНА
 // игра в жанре text adventure/interactive fiction про саню шобунена
-// версия: Alpha 2
 // язык: PascalABC.Net
 
 {$DEFINE DOOBUG} // todo
 program shobu_sim;
 {$APPTYPE console}
 {$TITLE Симулятор Шобунена}
-{$VERSION Alpha v3}
+{$VERSION Alpha v3} // TODO
 {$STRING_NULLBASED-}
 
 uses Procs, Scenes, Inventory, Anim, Cursor, Achievements, Chat, Plot_Scenes, Routes, Achs;
