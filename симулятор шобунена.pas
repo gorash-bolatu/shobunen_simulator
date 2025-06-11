@@ -3,18 +3,15 @@
 // версия: Alpha 2
 // язык: PascalABC.Net
 
+{$DEFINE DOOBUG} // todo
 program shobu_sim;
 {$APPTYPE console}
 {$TITLE Симулятор Шобунена}
-{$VERSION Alpha V3}
+{$VERSION Alpha v3}
 {$STRING_NULLBASED-}
 
-uses Procs, Scenes, Inventory, Anim, Cursor, Achievements, Chat;
-uses Plot_Scenes, Routes, Achs;
+uses Procs, Scenes, Inventory, Anim, Cursor, Achievements, Chat, Plot_Scenes, Routes, Achs;
 uses _Log;
-
-{$DEFINE DOOBUG} // todo
-// TODO проверить чтобы БЫЛА пауза перед выходом
 
 {$REGION интро}
 
@@ -187,9 +184,9 @@ begin
         {$ENDIF}
         
         {$IFDEF DOOBUG}
-        _Log.Init(VERSION, True);
+        _Log.Init(True);
         {$ELSE}
-        _Log.Init(VERSION, False);
+        _Log.Init(False);
         {$ENDIF}
         
         {$IFNDEF DOOBUG}
@@ -198,6 +195,7 @@ begin
         
         while GAMELOOP() do;
         writeln;
+        // TODO проверить чтобы БЫЛА пауза перед выходом
     except
         on _ex_: Exception do Catch(_ex_);
     end;

@@ -516,7 +516,7 @@ begin
                     broke_table := True;
                     broke_laptop := True;
                 end;
-            {-} 'SIT', 'OPEN_HDD', 'USE_HDD', 'OPEN_PC', 'GO_PC', 'GET_PC', 'SIT_PC', 'USE_PC', 'PLAY_PC',
+            {-} 'SIT', 'OPEN_HDD', 'USE_HDD', 'OPEN', 'OPEN_PC', 'GO_PC', 'GET_PC', 'SIT_PC', 'USE_PC', 'PLAY_PC',
             'WRITE', 'WRITE_VASYA', 'WRITE_ROMA', 'WRITE_TRIP', 'WRITE_RITA', 'WRITE_HOMIES', 'WRITE_CHAT',
             'OPEN_CHAT', 'OPEN_CHAT_HOMIES', 'CHAT_HOMIES', 'CHECK_UTUB', 'OPEN_UTUB', 'CHECK_VIDEO',
             'OPEN_VIDEO', 'CHECK_VIDEO_UTUB', 'OPEN_VIDEO_UTUB', 'CHECK_UTUB_VIDEO', 'OPEN_UTUB_VIDEO',

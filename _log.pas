@@ -2,7 +2,7 @@
 
 interface
 
-procedure Init(version: string; debug: boolean);
+procedure Init(debug: boolean);
 procedure Log(const strg: string);
 procedure PushKey(k: System.ConsoleKey);
 procedure DumpThmera;
@@ -18,7 +18,7 @@ implementation
 uses Procs, Achievements, Cursor;
 
 const
-    ThmeraCooldown: word = word.MaxValue;
+    ThmeraCooldown: word = MaxWord;
 
 var
     Txt: Text;
@@ -26,7 +26,6 @@ var
     LastTimeOfThmeraCall: longword;
     CharList: List<string> := new List<string>;
     DEBUGMODE: boolean;
-    PROGRAM_VERSION: string;
     DISABLED: boolean := True;
 
 function NotEnoughSpace: boolean := (CurDrive.AvailableFreeSpace < 1000);
@@ -40,8 +39,8 @@ end;
 function Header: string;
 begin
     Result := 'симулятор шобунена ';
-    if not NilOrEmpty(PROGRAM_VERSION) then
-        Result += $'[{PROGRAM_VERSION.ToLower}] ';
+    if not NilOrEmpty(VERSION) then
+        Result += $'[{VERSION.ToLower}] ';
     Result += DateTime.Now.ToString('yyyy-MM-dd HH\:mm\:ss');
     if DEBUGMODE then
         Result += NewLine + '--- DEBUG ---';
@@ -158,14 +157,13 @@ begin
     end;
 end;
 
-procedure Init(version: string; debug: boolean);
+procedure Init(debug: boolean);
 var
     sep: char := System.IO.Path.DirectorySeparatorChar;
     path: string;
     name: string := ('SHOBUSIM_' + DateTime.Now.ToString('yyMMdd-HHmmss') + '.log');
     old_file_exists: boolean;
 begin
-    PROGRAM_VERSION := version;
     DEBUGMODE := debug;
     if DEBUGMODE then
     begin

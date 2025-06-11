@@ -76,12 +76,17 @@ end;
 
 function GetRefAsms := System.Reflection.Assembly.GetExecutingAssembly.GetReferencedAssemblies;
 
-
+const
+    DEFAULT_LIBS: array of string = (
+        'mscorlib',
+        'System',
+        'System.Numerics',
+        'System.Core');
 
 initialization
     {$IFDEF DOOBUG}
     foreach p: System.Reflection.AssemblyName in GetRefAsms do
-        if not (p.Name in ['mscorlib', 'System', 'System.Numerics', 'System.Core']) then
+        if not (p.Name in DEFAULT_LIBS) then
             println('[DEBUG]', 'Подключена сборка', p.Name, p.Version);
     {$ENDIF}
     foreach i: string in GetAllResourceNames do

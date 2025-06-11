@@ -75,7 +75,7 @@ begin
     begin
         if DO_TTS then
             try
-                synth.SpeakAsync(ph.Replace('PascalABC.NET', 'паскаль а бэ цэ дот нэт').Replace('узнаешь', 'у знаешь').Replace('...', ','));
+                synth.SpeakAsync(ph.Replace('PascalABC.NET', 'паскаль а бэ цэ дот нэт').Replace('v', 'версия').Replace('узнаешь', 'у знаешь').Replace('...', ','));
                 // ждать 800 мс пока говорилка не подгрузится:
                 System.Threading.SpinWait.SpinUntil(() -> IsSpeaking, 800);
                 // если говорилка за это время не подгрузилась:
