@@ -5,147 +5,132 @@ interface
 
 type
     
-    ByteOrNull = System.Nullable<byte>;
-    
-    Scene = abstract class
+    /// НЕ НАСЛЕДОВАТЬ
+    Nextable = abstract class
+    private
+        fNext: Nextable := nil;
+        function GetNext: Nextable; virtual;
     protected
-        body: procedure;
-        next: Scene;
-        constructor Create(scenename: string);
+        constructor Create(n: string);
+        constructor Create;
         destructor Destroy;
+        function Chain: sequence of Nextable;
+        property Next: Nextable read GetNext write fNext;
     public
-        name: string; // todo убрать когда будут логи?
-        procedure Run;
-        function Passed: boolean; abstract;
-        function Linkup(params scenes: array of Scene): Scene;
+        name: string; // todo убрать когда не будет логов
+    end;
+    
+    /// НЕ НАСЛЕДОВАТЬ
+    Scene = abstract class(Nextable)
+    protected
+        constructor Create(const scenename: string);
+    public
         function Scenes: sequence of Scene;
     end;// class end
     
-    Cutscene = class(Scene)
+    /// класс сцены проходимой без геймоверов 
+    /// требует определения процедуры Body с логикой собственно сцены
+    Cutscene = abstract class(Scene)
     public
-        constructor Create(proc: procedure; name: string);
-        function Passed: boolean; override;
+        constructor Create(const name: string);
+        /// процедура с логикой сцены
+        procedure Body; abstract;
     end;// class end
     
-    PlayableScene = class(Scene)
-    private
-        boolfunc: function: boolean;
+    /// класс сцены, в которой можно получить геймовер
+    /// требует определения функции Passed (возвращает boolean) с логикой сцены
+    /// True если сцена пройдена, False если во время сцены получен геймовер
+    PlayableScene = abstract class(Scene)
     public
-        constructor Create(func: function: boolean; name: string);
-        destructor Destroy;
-        function Passed: boolean; override;
+        constructor Create(const name: string);
+        /// функция с логикой сцены
+        /// возвращает:
+        ///     - True (если сцена пройдена)
+        ///     - False (если во время сцены получен геймовер)
+        function Passed: boolean; abstract;
     end;//class end
     
-    ForkScene = class(Scene)
-    private
-        selectfunc: function: ByteOrNull;
-        options: array of Scene;
+    /// класс развилки с выбором сцены
+    /// требует определения функции GetNext, возвращающей Nextable
+    /// (Nextable'ом может быть и Cutscene, и PlayableScene, и другой Fork)
+    /// в GetNext логика выбора следующей сцены (какой Nextable идёт следующим)
+    Fork = abstract class(Nextable)
     public
-        constructor Create(func: function: ByteOrNull; name: string; params scenes: array of Scene);
-        destructor Destroy;
-        function Passed: boolean; override;
+        constructor Create(const name: string);
+        procedure SelectAsNext(const n: Nextable);
+        /// функция с логикой выбора следующей сцены/развилки
+        function GetNext: Nextable; abstract; override;
     end;
 // type end
+
+function Link(params scenes_and_forks: array of Nextable): Nextable;
 
 
 
 implementation
 
 var
-    ListOfAll: List<Scene> := new List<Scene>;
+    ListOfAll: List<Nextable> := new List<Nextable>;
 
-constructor Scene.Create(scenename: string);
+constructor Nextable.Create() := ListOfAll.Add(self);
+
+constructor Nextable.Create(const n: string);// todo убрать когда не будет логов
 begin
-    self.name := scenename;
-    self.next := nil;
+    self.name := n;
     ListOfAll.Add(self);
 end;
 
-destructor Scene.Destroy();
+destructor Nextable.Destroy;
 begin
     self.name := nil;
-    self.next := nil;
-    self.body := nil;
+    self.Next := nil;
 end;
 
-procedure Scene.Run() := self.body();
+function Nextable.GetNext: Nextable := self.fNext;
 
-function Scene.Linkup(params scenes: array of Scene): Scene;
+function Nextable.Chain: sequence of Nextable;
 begin
-    Result := self;
-    if (scenes.Length = 0) then exit;
-    self.next := scenes[0];
-    if (scenes.Length = 1) then exit;
-    {$IFDEF DOOBUG}
-    foreach s: Scene in scenes.SkipLast do
-        if (s is ForkScene) then
-            raise new Exception('РАЗВИЛКА НЕ В КОНЦЕ СПИСКА СЦЕН: ' + s.name);
-    {$ENDIF}
-    for var i: integer := 0 to (scenes.Length - 2) do
-        scenes[i].next := scenes[i + 1];
+    var n: Nextable := self;
+    repeat
+        yield n;
+        n := n.Next;
+    until n = nil;
 end;
+
+constructor Scene.Create(const scenename: string) := inherited Create(scenename); // todo убрать когда не будет логов
 
 function Scene.Scenes: sequence of Scene;
 begin
-    var s := self;
-    repeat
-        yield s;
-        s := s.next;
-    until s = nil;
+    foreach n: Nextable in self.Chain do
+        if n is Scene then
+            yield n as Scene;
 end;
 
-constructor Cutscene.Create(proc: procedure; name: string);
+constructor Cutscene.Create(const name: string);// todo убрать когда не будет логов
 begin
     inherited Create(name);
-    self.body := proc;
 end;
 
-function Cutscene.Passed: boolean;
-begin
-    self.body();
-    Result := True;
-end;
-
-constructor PlayableScene.Create(func: function: boolean; name: string);
+constructor PlayableScene.Create(const name: string);// todo убрать когда не будет логов
 begin
     inherited Create(name);
-    self.body := () -> func();
-    self.boolfunc := func;
 end;
 
-destructor PlayableScene.Destroy;
-begin
-    inherited Destroy;
-    self.boolfunc := nil;
-end;
-
-function PlayableScene.Passed: boolean := self.boolfunc();
-
-constructor ForkScene.Create(func: function: ByteOrNull; name: string; params scenes: array of Scene);
+constructor Fork.Create(const name: string);// todo тоже убрать
 begin
     inherited Create(name);
-    self.body := () -> func();
-    self.selectfunc := func;
-    self.options := scenes;
 end;
 
-destructor ForkScene.Destroy;
-begin
-    inherited Destroy;
-    self.selectfunc := nil;
-    foreach s: Scene in self.options do s.Destroy;
-    self.options := nil;
-end;
+procedure Fork.SelectAsNext(const n: Nextable) := self.Next := n;
 
-function ForkScene.Passed: boolean;
+function Link(params scenes_and_forks: array of Nextable): Nextable;
 begin
-    var res: ByteOrNull := selectfunc();
-    if res.HasValue then
-    begin
-        self.next := self.options[res.Value];
-        Result := True;
-    end
-    else Result := False;
+    if (scenes_and_forks.Length = 0) then Result := nil
+    else begin
+        for var i: integer := 0 to (scenes_and_forks.Length - 2) do
+            scenes_and_forks[i].Next := scenes_and_forks[i + 1];
+        Result := scenes_and_forks[0];
+    end;
 end;
 
 
@@ -154,7 +139,7 @@ initialization
 
 finalization
     if (ListOfAll = nil) then exit;
-    foreach i: Scene in ListOfAll do i.Destroy;
+    foreach i: Nextable in ListOfAll do i.Destroy;
     ListOfAll.Clear;
     ListOfAll := nil;
 

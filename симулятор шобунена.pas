@@ -81,14 +81,11 @@ end;
 {$REGION сюжет}
 var
     
-    sFork := new PlayableScene(PART4, 'драка с костылём');
-    // todo переделать в ForkScene
-    
-    sStart := (new PlayableScene(PART1, 'комната')).Linkup(
-    new PlayableScene(PART2, 'подъезд'),
-    new Cutscene(PART3, 'выход на улицу'),
-    sFork);
-    
+    sStart := Scenes.Link(
+    new PART1('комната'),
+    new PART2('подъезд'))
+    as Scene;
+
 {$ENDREGION}
 
 {$REGION gameloop}
@@ -100,12 +97,12 @@ begin
     foreach current_scene: Scene in sStart.Scenes do
     begin
         // части просто проходимые без геймоверов:
-        if (current_scene is Cutscene) then current_scene.Run()
+        if (current_scene is Cutscene) then (current_scene as Cutscene).Body()
         // части с возможностью геймовера:
         else begin
-            _Log.Log('=== часть: ' + current_scene.Name);
+            _Log.Log('=== часть: ' + current_scene.name);
             Inventory.Save;
-            while not current_scene.Passed() do
+            while not (current_scene as PlayableScene).Passed() do
             begin
                 Achs.GameOver.Achieve;
                 _Log.Log('=== геймовер');
