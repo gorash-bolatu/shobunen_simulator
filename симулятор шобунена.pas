@@ -93,7 +93,6 @@ function GAMELOOP: boolean;
 begin
     Result := True;
     Inventory.Reset;
-    Route.SetRoute(route_enum.Solo);
     foreach current_scene: Scene in sStart.Scenes do
     begin
         // части просто проходимые без геймоверов:
@@ -149,16 +148,7 @@ begin
     writeln('<=== TO BE CONTINUED...');
     writeln;
     Anim.Next3;
-    
-    //            case Route.GetCurRoute of
-    //                route_enum.Solo: aSolo.Achieve;
-    //                route_enum.Rita: aRita.Achieve;
-    //                route_enum.Trip: aTrip.Achieve;
-    //                route_enum.Roma: aRoma.Achieve;
-    //            end;
-    // todo
     Achievements.DisplayAll;
-    
     TxtClr(Color.Green);
     writeln('Конец демо-версии. Перезапустить? (Y/N)');
     if YN then

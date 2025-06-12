@@ -1,10 +1,16 @@
 ﻿unit Plot_Prologue;
 
-uses Procs, Chat, Inventory, Items, Menu, Anim, Routes, ButtonMashMinigames,
+uses Procs, Chat, Inventory, Items, Menu, Anim, ButtonMashMinigames,
     Achs, Matrix, Tutorial, Dialogue, Scenes;
 
 type
-    
+    Route = (Solo, Rita, Trip, Roma);
+
+var
+    CurrentRoute: Route;
+    TextedVasya, TextedRita, TextedRoma: boolean;
+
+type
     PART1 = class(PlayableScene)
     private
         charger_location: byte := Random(7);
@@ -16,14 +22,14 @@ type
         procedure chat_prompt;
         begin
             print('Кому ты напишешь?');
-            if not Route.TextedVasya then print('Васе?');
+            if not TextedVasya then print('Васе?');
             if not texted_trip then print('Трипу?');
-            if not Route.TextedRoma then
+            if not TextedRoma then
             begin
                 print('Роме?');
                 if not tried_texting_rita then print('Рите?')
             end
-            else if not Route.TextedRita then print('Рите?');
+            else if not TextedRita then print('Рите?');
             writeln('Или никому?');
         end;
         
@@ -40,7 +46,7 @@ type
                 CMDRES := ReadCmd('написать');
                 case CMDRES of // case2 begin
                     'VASYA':
-                        if Route.TextedVasya then writeln('Ты уже писал Васе!') else
+                        if TextedVasya then writeln('Ты уже писал Васе!') else
                         begin
                             Chat.Name := ('Вася');
                             Chat.DrawTop;
@@ -54,7 +60,7 @@ type
                             Chat.Response('слушпй давай не сцгодня а');
                             Chat.Enter('Ладно тогда пока');
                             writelnx2;
-                            Route.TextedVasya := True;
+                            TextedVasya := True;
                             writeln('По-видимому, сегодня у Васи не очень хороший день.');
                         end;
                     'TRIP':
@@ -66,7 +72,7 @@ type
                             Chat.Response('Привет, всё отлично.', 'Правда, проснулся совсем недавно.');
                             Chat.Enter('Эх твой режим сна как всегда');
                             Chat.Response('Хе-хе.', 'Ладно, говори, что там по новостям.');
-                            if Route.TextedRoma then
+                            if TextedRoma then
                             begin
                                 Chat.Enter('Мы с ромой собрались на тусу');
                                 Chat.Response('На стоянке которая?');
@@ -82,10 +88,10 @@ type
                             Chat.Enter('Ок звучит неплохо давай');
                             writelnx2;
                             texted_trip := True;
-                            if not Route.TextedRoma then writeln('Ты договорился встретиться с Трипом у гаражей.');
+                            if not TextedRoma then writeln('Ты договорился встретиться с Трипом у гаражей.');
                         end;
                     'ROMA', 'ROMA_ROMA':
-                        if Route.TextedRoma then writeln('Ты уже писал Роме!') else
+                        if TextedRoma then writeln('Ты уже писал Роме!') else
                         begin
                             Chat.Name := ('Рома Кафератор');
                             Chat.DrawTop;
@@ -107,13 +113,13 @@ type
                                 Chat.Response('Я С НИМ ПОБАЗАРЮ ПРО ЭТО', 'КАРОЧ ДО СВЯЗИ');
                             end;
                             writelnx2;
-                            Route.TextedRoma := True;
+                            TextedRoma := True;
                             writeln('Ты договорился пойти с Ромой на "тусу" на стоянке.');
                             if tried_texting_rita then writeln('И кстати, Рита тем временем снова появилась в сети!');
                         end;
                     'RITA', 'RITA_RITA':
-                        if Route.TextedRita then writeln('Ты уже писал Рите!')
-                        else if Route.TextedRoma then
+                        if TextedRita then writeln('Ты уже писал Рите!')
+                        else if TextedRoma then
                         begin
                             Chat.Name := ('Маргарита Тесакова');
                             Chat.DrawTop;
@@ -147,7 +153,7 @@ type
                             Chat.Enter('Короче если хочешь приходи туда');
                             Chat.Response('ок я подумаю (-~-)');
                             writelnx2;
-                            Route.TextedRita := True;
+                            TextedRita := True;
                             writeln('Получается, Рита согласилась пойти с тобой?');
                         end
                         else if tried_texting_rita then writeln('Рита сейчас не отвечает.')
@@ -160,7 +166,7 @@ type
                     'OFF': break;
                 else writeln('Ты не можешь написать этому человеку.'); // case2 else
                 end; // case2 end
-                if (Route.TextedVasya and Route.TextedRita) then
+                if (TextedVasya and TextedRita) then
                 begin
                     ClearLine(True);
                     writeln('Итак, ты написал всем корешам, кто сейчас онлайн.');
@@ -183,7 +189,7 @@ type
             if Inventory.Has(Items.Hdd) then writeln('Ах да, ещё у тебя с собой тот жёсткий диск - его можно подключить.');
             writeln('Итак, что ты будешь делать с компьютером?');
             repeat
-                if not (Route.TextedVasya and Route.TextedRita) then Menu.Load('написать друзьям');
+                if not (TextedVasya and TextedRita) then Menu.Load('написать друзьям');
                 if not watched_utub then Menu.Load('смотреть Рутуб');
                 if not torrenting_movies then Menu.Load('качать плохие российские фильмы');
                 if not played_cossacks then Menu.Load('играть в Казачков');
@@ -445,9 +451,10 @@ type
         function Passed: boolean; override;
         begin
             Result := False;
-            Route.TextedRita := False;
-            Route.TextedVasya := False;
-            Route.TextedRoma := False;
+            TextedRita := False;
+            TextedVasya := False;
+            TextedRoma := False;
+            CurrentRoute := Route.Solo;
             TxtClr(Color.White);
             writeln('Тебя зовут Саня Шобунен.');
             writeln('Ты живёшь в старенькой многоэтажке в московском районе Чертаново.');
@@ -732,8 +739,8 @@ type
                     end;
                 end; // case end
             end; // while end
-            if Route.TextedRoma then Route.SetRoute(route_enum.Roma)
-            else if texted_trip then Route.SetRoute(route_enum.Trip);
+            if TextedRoma then CurrentRoute := Route.Roma
+            else if texted_trip then CurrentRoute := Route.Trip;
             Result := True;
         end;
     {$ENDREGION}
@@ -918,12 +925,12 @@ type
                 end;//case end
             end;//while end
             writeln('По пути ты встречаешь каких-то гопников, курящих у трансформаторной будки.');
-            if Route.TextedRoma then writeln('Ты не сразу узнаёшь в них друзей Ромы с района.')
+            if TextedRoma then writeln('Ты не сразу узнаёшь в них друзей Ромы с района.')
             else writeln('Они похожи на парней, с которыми часто тусуется один твой друг, Рома.');
             Dialogue.Say(anon, 'О, Шобунен, ты, что ли?');
             Dialogue.Say(Саня, 'Э... Привет, чё как?');
             Dialogue.Say(anon, 'Норм. Чё, идёшь на парковку?');
-            if Route.TextedRoma then
+            if TextedRoma then
             begin
                 Dialogue.Say(Саня, 'Ага. Вы тоже туда на тусу?');
                 Dialogue.Say(anon,
@@ -939,7 +946,7 @@ type
                 writeln('Парни шустро пожимают тебе руки и продолжают говорить о своём.');
                 writeln('Ты пожимаешь плечами и идёшь дальше.');
             end;
-            Route.SetRoute(second_floor ? route_enum.Solo : route_enum.Rita);
+            CurrentRoute := second_floor ? Route.Solo : Route.Rita;
             // todo другой способ переключения рутов Соло и Риты?
             Result := True;
         end;
