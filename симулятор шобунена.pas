@@ -6,10 +6,10 @@
 program shobu_sim;
 {$APPTYPE console}
 {$TITLE Симулятор Шобунена}
-{$VERSION Alpha v3} // TODO
+{$VERSION Alpha v4} // TODO
 {$STRING_NULLBASED-}
 
-uses Procs, Scenes, Inventory, Anim, Cursor, Achievements, Chat, Plot_Scenes, Routes, Achs;
+uses Procs, Scenes, Inventory, Anim, Cursor, Achievements, Chat, Routes, Achs, Plot_Prologue;
 uses _Log;
 
 {$REGION интро}
@@ -77,13 +77,26 @@ end;
 
 {$ENDREGION}
 
+{$REGION сюжет}
+var
+    
+    sFork := new PlayableScene(PART4, 'драка с костылём');
+    // todo переделать в ForkScene
+    
+    sStart := (new PlayableScene(PART1, 'комната')).Linkup(
+    new PlayableScene(PART2, 'подъезд'),
+    new Cutscene(PART3, 'выход на улицу'),
+    sFork);
+    
+{$ENDREGION}
+
 {$REGION gameloop}
 function GAMELOOP: boolean;
 begin
     Result := True;
     Inventory.Reset;
     Route.SetRoute(route_enum.Solo);
-    foreach current_scene: Scene in SCENES do
+    foreach current_scene: Scene in sStart.Scenes do
     begin
         // части просто проходимые без геймоверов:
         if (current_scene is Cutscene) then current_scene.Run()
