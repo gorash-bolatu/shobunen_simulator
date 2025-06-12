@@ -1,12 +1,15 @@
 ﻿unit Items;
 
-uses Inventory;
+type
+    Item = record
+        name: string;
+    end;// record end
 
 const
-    itCola: Item = (name: 'Бутылка колы');
-    itCharger: Item = (name: 'Зарядка от ноутбука');
-    itHdd: Item = (name: 'Жёсткий диск');
-    itShard: Item = (name: 'Осколок зеркала');
-    itDog: Item = (name: 'Юпитер');
+    Cola: Item = (name: 'Бутылка колы');
+    Charger: Item = (name: 'Зарядка от ноутбука');
+    Hdd: Item = (name: 'Жёсткий диск');
+    Shard: Item = (name: 'Осколок зеркала');
+    Dog: Item = (name: 'Юпитер');
 
 end.

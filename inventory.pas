@@ -2,10 +2,7 @@
 
 interface
 
-type
-    Item = record
-        name: string;
-    end;// record end
+uses Items;
 
 /// сохранить состояние инвентаря
 procedure Save;
