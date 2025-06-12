@@ -153,7 +153,7 @@ function YN: boolean;
 begin
     ClrKeyBuffer;
     repeat
-        case ReadKey of
+        case ComputeWithoutUpdScr(() -> ReadKey) of
             Key.Y: Result := True;
             Key.N: Result := False;
         else continue

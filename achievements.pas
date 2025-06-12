@@ -70,7 +70,6 @@ begin
             writeln(TAB, '} ', ach.fName);
             TxtClr(Color.DarkCyan);
             writeln(TAB, '- ', ach.fDesc);
-            sleep(300);
         end;
         writeln;
         TxtClr(Color.Green);
