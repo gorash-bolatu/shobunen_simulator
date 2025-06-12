@@ -6,7 +6,7 @@ procedure Mtrx;
 
 implementation
 
-uses Procs, Cursor, Draw, Anim, Dialogue, TextToSpeech, Menu;
+uses Procs, Cursor, Draw, Anim, Dialogue, TextToSpeech, Menu, Versioning;
 uses _Log;
 
 procedure Transition;
@@ -171,7 +171,7 @@ begin
     TextToSpeech.Architect(
                    'Симулятор намного старше, чем ты думаешь',
                    'Я предпочитаю лимитировать эпоху Симулятора очередным билдом',
-                   $'И в таком случае, это уже чёрт знает какая версия - называется "{VERSION}".',
+                   $'И в таком случае, это уже {VERSION_nth} версия, "{VERSION}".',
                    'Первый Симулятор, который я создал, был произведением искусства. Совершенством',
                    'Его триумф сравним лишь с его монументальным крахом',
                    'Неизбежность этого краха является следствием убогости языка PascalABC.NET');

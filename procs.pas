@@ -1,5 +1,4 @@
 ﻿{$DEFINE DOOBUG} // todo
-{$REFERENCE System.Windows.Forms.dll}
 unit Procs;
 
 interface
@@ -14,7 +13,6 @@ type
         Тританити, Мотвеус, Агент_Сергеев, Меромавинген);
 
 const
-    VERSION = System.Windows.Forms.Application.ProductVersion;
     TAB = #9;
     MIN_WIDTH: byte = 100;
     MIN_HEIGHT: byte = 20;
@@ -25,8 +23,6 @@ var
     CMDRES: string;
     /// Сюда загоняется полученное из Menu.Select или Menu.FastSelect
     MENURES: string;
-    /// Использовать ли говорилку (text-to-speech)
-    DO_TTS: boolean := False;
 
 /// цвет текста
 procedure TxtClr(clr: Color);
@@ -280,7 +276,7 @@ begin
         Result := Result.Trim.ToLower;
         while (Result.Contains('  ')) do Result := Result.Replace('  ', ' ');
         Result := Result.Replace('ё', 'е').Replace('тся', 'ться');
-        Result := Parser.ParseCmd(Result);
+        Result := ParseCmd(Result);
         if NilOrEmpty(prompt) then _Log.Log($'[{Result}]') else _Log.Log($'(префикс:"{prompt}") [{Result}]');
         if (Result = 'INV') or (Result = 'CHECK_INV') then Inventory.Output
         else break;
@@ -397,13 +393,30 @@ begin
     Anim.Next3;
 end;
 
-procedure SleepMode :=
-System.Windows.Forms.Application.SetSuspendState(
-    System.Windows.Forms.PowerState.Suspend, True, False);
+function SetSuspendState(hiberate, forceCritical, disableWakeEvent: boolean): boolean;
+    external 'Powrprof.dll' name 'SetSuspendState';
 
+procedure SleepMode := SetSuspendState(false, true, true);
 
+procedure PrintReferencedAssemblies;
+const
+    DEFAULT_LIBS: array of string = (
+        'System.Speech', // установлена на каждом компе с виндой поэтому ок?
+        'mscorlib',
+        'System',
+        'System.Numerics',
+        'System.Core');
+begin
+    var refs := System.Reflection.Assembly.GetExecutingAssembly.GetReferencedAssemblies;
+    var ext_refs := refs.&Where(q -> not (q.Name in DEFAULT_LIBS));
+    foreach a: System.Reflection.AssemblyName in ext_refs do
+        println('[DEBUG]', 'Подключена сборка', a.Name, a.Version);
+    if ext_refs.Any then
+        writeln('↑↑↑ в релизе не должно быть всех этих внешних сборок! (прогнать через ilmerge)');
+end;
 
 initialization
+    PrintReferencedAssemblies;
     if not STARTUP then Halt(0);
 
 finalization

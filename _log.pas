@@ -15,7 +15,7 @@ var
 
 implementation
 
-uses Procs, Achievements, Cursor;
+uses Procs, Achievements, Cursor, TextToSpeech, Versioning;
 
 const
     ThmeraCooldown: word = MaxWord;

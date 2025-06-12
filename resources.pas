@@ -8,11 +8,13 @@ function GetResourceStream(const resource_name: string): System.IO.Stream;
 /// получить строку текста из встроенного файла ресурсов
 function TextFromResourceFile(const resource_name: string): string;
 
+
+
 implementation
 
 function GetResourceStream(const resource_name: string): System.IO.Stream;
 begin
-    Result := System.Reflection.Assembly.GetExecutingAssembly.GetManifestResourceStream(resource_name);
+    Result := System.Reflection.Assembly.GetEntryAssembly.GetManifestResourceStream(resource_name);
     {$IFDEF DOOBUG}
     if (Result = nil) then
         raise new System.Resources.MissingManifestResourceException('НЕТ РЕСУРСА: ' + resource_name);
@@ -47,7 +49,7 @@ end;
 
 function GetAllResourceNames: array of string;
 begin
-    Result := System.Reflection.Assembly.GetExecutingAssembly.GetManifestResourceNames;
+    Result := System.Reflection.Assembly.GetEntryAssembly.GetManifestResourceNames;
 end;
 
 function HasDuplicates<T>(s: sequence of T): boolean := s.GroupBy(q -> q).Any(q -> q.Skip(1).Any);
@@ -70,31 +72,7 @@ begin
     end;
 end;
 
-function GetRefAsms := System.Reflection.Assembly.GetExecutingAssembly.GetReferencedAssemblies;
-
-const
-    DEFAULT_LIBS: array of string = (
-        'mscorlib',
-        'System',
-        'System.Numerics',
-        'System.Core');
-
 initialization
-    {$IFDEF DOOBUG}
-    foreach p: System.Reflection.AssemblyName in GetRefAsms do
-        if not (p.Name in DEFAULT_LIBS) then
-            println('[DEBUG]', 'Подключена сборка', p.Name, p.Version);
-    {$ENDIF}
-    foreach i: string in GetAllResourceNames do
-    begin
-        try
-            ValidateResource(i);
-        except
-            on ex: Exception do writeln(#7, '[!!!] ', ex.GetType, ': ', ex.Message);
-        end;
-        {$IFDEF DOOBUG}
-        println('[DEBUG]', 'Подключен ресурс', i)
-        {$ENDIF}
-    end;
-
+    println('[DEBUG]', 'Ресурсы:', '[' + GetAllResourceNames.JoinToString(', ') + ']');
+    foreach res: string in GetAllResourceNames do ValidateResource(res);
 end.

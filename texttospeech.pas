@@ -12,6 +12,10 @@ procedure ArchitectFinal;
 procedure Architect(params phrases: array of string);
 procedure Init;
 
+var
+    DO_TTS: boolean := True;// использовать ли говорилку
+    // todo перенести в implementation когда не будет логов
+
 implementation
 
 uses Procs, Cursor, Anim, MyTimers, Parser;
@@ -19,14 +23,16 @@ uses _Log;
 
 type
     InstalledVoice = System.Speech.Synthesis.InstalledVoice;
+    SpeechSynthesizer = System.Speech.Synthesis.SpeechSynthesizer;
 
 var
-    synth: System.Speech.Synthesis.SpeechSynthesizer;// говорилка
+    synth: SpeechSynthesizer;// говорилка
 
-function IsSpeaking: boolean := (synth.State = System.Speech.Synthesis.SynthesizerState.Speaking);
+function IsSpeaking(Self: SpeechSynthesizer): boolean; extensionmethod := 
+(Self.State = System.Speech.Synthesis.SynthesizerState.Speaking);
 
 function IsRus(Self: InstalledVoice): boolean; extensionmethod :=
-Self.VoiceInfo.Culture.Name.IsMatch('RU', RegexOptions.IgnoreCase);
+Self.VoiceInfo.Culture.TwoLetterISOLanguageName.Equals('ru');
 
 function IsMale(Self: InstalledVoice): boolean; extensionmethod :=
 Self.VoiceInfo.Gender = System.Speech.Synthesis.VoiceGender.Male;
@@ -78,9 +84,9 @@ begin
             try
                 synth.SpeakAsync(ParseTts(ph));
                 // ждать 800 мс пока говорилка не подгрузится:
-                System.Threading.SpinWait.SpinUntil(() -> IsSpeaking, 800);
+                System.Threading.SpinWait.SpinUntil(() -> synth.IsSpeaking, 800);
                 // если говорилка за это время не подгрузилась:
-                if not IsSpeaking then
+                if not synth.IsSpeaking then
                     raise new System.TimeoutException('ГОЛОСОВОЙ ДВИЖОК НЕ ПОДГРУЗИЛСЯ');// будет обработано xrd
             except
                 on xrd: Exception do Fail(xrd.GetType.ToString, xrd.Message, False);
@@ -97,7 +103,7 @@ begin
         writeln(TAB);
         Cursor.GoTop(-1);
         if DO_TTS then
-            if IsSpeaking and (synth.Rate < 9) then synth.Rate += 1;
+            if synth.IsSpeaking and (synth.Rate < 9) then synth.Rate += 1;
     end;
 end;
 

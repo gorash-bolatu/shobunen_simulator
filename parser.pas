@@ -77,20 +77,39 @@ begin
     Result := True;
 end;
 
+{$IFDEF DOOBUG}
+
 function FetchAndParse(const resource_name: string): LightJson.JsonArray;
 begin
-    Result := LightJson.JsonValue.Parse(TextFromResourceFile(resource_name)).AsJsonArray;
-    {$IFDEF DOOBUG}
-    print('[DEBUG]', 'Проверка', resource_name + '...');
+    write('[DEBUG] ', resource_name, ': Загрузка... ');
     var watch := new Stopwatch;
     watch.Start;
+    var json: string := TextFromResourceFile(resource_name);
+    watch.Stop;
+    write(watch.Elapsed.TotalMilliseconds, 'ms ', 'Парсинг... ');
+    watch.Restart;
+    Result := LightJson.JsonValue.Parse(json).AsJsonArray;
+    watch.Stop;
+    write(watch.Elapsed.TotalMilliseconds, 'ms ', 'Проверка... ');
+    watch.Restart;
     foreach i: LightJson.JsonValue in Result do
         if not IsValidEntry(i) then raise new LightJson.Serialization.JsonParseException;
     watch.Stop;
-    println('ok', watch.Elapsed.TotalMilliseconds, 'ms');
+    writeln(watch.Elapsed.TotalMilliseconds, 'ms');
     watch := nil;
-{$ENDIF}
 end;
+
+{$ELSE}
+
+function FetchAndParse(const resource_name: string): LightJson.JsonArray;
+begin
+    Result := LightJson.JsonValue.Parse(TextFromResourceFile(resource_name)).AsJsonArray;
+    foreach i: LightJson.JsonValue in Result do
+        if not IsValidEntry(i) then raise new LightJson.Serialization.JsonParseException;
+    
+end;
+
+{$ENDIF}
 
 initialization
     cmd_json := FetchAndParse('parse_cmd.json');
