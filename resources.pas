@@ -1,5 +1,4 @@
-﻿{$DEFINE DOOBUG} // todo
-unit Resources;
+﻿unit Resources;
 
 interface
 
@@ -12,13 +11,15 @@ function TextFromResourceFile(const resource_name: string): string;
 
 implementation
 
+uses _Settings;
+
 function GetResourceStream(const resource_name: string): System.IO.Stream;
 begin
     Result := System.Reflection.Assembly.GetEntryAssembly.GetManifestResourceStream(resource_name);
-    {$IFDEF DOOBUG}
-    if (Result = nil) then
-        raise new System.Resources.MissingManifestResourceException('НЕТ РЕСУРСА: ' + resource_name);
-    {$ENDIF}
+    if DEBUGMODE then
+        if (Result = nil) then
+            raise new System.Resources.MissingManifestResourceException(
+            'НЕТ РЕСУРСА: ' + resource_name);
 end;
 
 function TextFromResourceFile(const resource_name: string): string;
@@ -73,6 +74,8 @@ begin
 end;
 
 initialization
+    if not DEBUGMODE then exit;
     println('[DEBUG]', 'Ресурсы:', '[' + GetAllResourceNames.JoinToString(', ') + ']');
     foreach res: string in GetAllResourceNames do ValidateResource(res);
+
 end.

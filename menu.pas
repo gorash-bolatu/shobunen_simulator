@@ -1,20 +1,20 @@
-﻿{$DEFINE DOOBUG} // todo
-unit Menu;
+﻿unit Menu;
 
 interface
 
 /// загрузить элемент в будущее меню выбора
 procedure Load(element: string);
 /// выгрузить элементы и выбрать строку из меню
-function UnloadSelect: string;
+procedure UnloadSelect;
 /// выбрать строку из меню выбора из вариантов options
-function FastSelect(params options: array of string): string;
-
+procedure FastSelect(params options: array of string);
+/// последний сохранённый результат успешного выбора в меню
+function LastResult: string;
 
 
 implementation
 
-uses Procs, Tutorial, Cursor, Draw, Inventory, Anim;
+uses Procs, Tutorial, Cursor, Draw, Inventory, Anim, _Settings;
 uses _Log;
 
 const
@@ -22,7 +22,8 @@ const
     BACKARROW: string = '<--';
 
 var
-    opt: List<string> := new List<string>;
+    menures: string;
+    opt: List<string>;
 
 function Select(const options: array of string): string;
 var
@@ -33,10 +34,11 @@ var
 begin
     repeat
         o_c := options.Count;
-        {$IFDEF DOOBUG}
-        if o_c > 32 then raise new Exception('СЛИШКОМ МНОГО ОПЦИЙ ВЫБОРА')
-        else if o_c = 0 then raise new Exception('НЕТ ПУНКТОВ ВЫБОРА ДЛЯ МЕНЮ');
-        {$ENDIF}
+        if DEBUGMODE then
+            if o_c > 32 then
+                raise new Exception('СЛИШКОМ МНОГО ОПЦИЙ ВЫБОРА')
+            else if o_c = 0 then
+                raise new Exception('НЕТ ПУНКТОВ ВЫБОРА ДЛЯ МЕНЮ');
         point := 0;
         TxtClr(Color.Gray);
         foreach st: string in options do writeln(PROMPT + st);
@@ -109,21 +111,24 @@ end;
 
 procedure Load(element: string) := opt.Add(element);
 
-function UnloadSelect: string;
+procedure UnloadSelect;
 begin
     Anim.Next3;
-    Result := ComputeWithoutUpdScr(() -> Select(opt.ToArray));
+    menures := ComputeWithoutUpdScr(() -> Select(opt.ToArray));
     for var i: integer := 0 to (opt.Count - 1) do opt[i] := nil;
     opt.Clear;
 end;
 
-function FastSelect(params options: array of string): string;
+procedure FastSelect(params options: array of string);
 begin
     Anim.Next3;
-    Result := ComputeWithoutUpdScr(() -> Select(options));
+    menures := ComputeWithoutUpdScr(() -> Select(options));
 end;
 
+function LastResult: string := menures;
+
 initialization
+    opt := new List<string>;
 
 finalization
     opt.Clear;

@@ -1,9 +1,6 @@
-﻿{$DEFINE DOOBUG} // todo
-unit Procs;
+﻿unit Procs;
 
 interface
-
-uses MyTimers, Inventory;
 
 type
     Color = System.ConsoleColor;
@@ -17,12 +14,6 @@ const
     MIN_WIDTH: byte = 100;
     MIN_HEIGHT: byte = 20;
     NilOrEmpty = string.IsNullOrEmpty;
-
-var
-    /// Сюда загоняется полученное из ReadCmd
-    CMDRES: string;
-    /// Сюда загоняется полученное из Menu.Select или Menu.FastSelect
-    MENURES: string;
 
 /// цвет текста
 procedure TxtClr(clr: Color);
@@ -69,7 +60,9 @@ function FiftyFifty<T>(a, b: T): T;
 /// сборка мусора вручную
 procedure CollectGarbage;
 /// ввод + парсинг команды
-function ReadCmd(prompt: string := ''): string;
+procedure ReadCmd(prompt: string := '');
+/// последний сохранённый результат успешно введённой команды
+function LastCmdResult: string;
 /// обёртка для комнат побега
 procedure EscapeRoom(proc: procedure);
 /// принудительно перевести windows в спящий режим
@@ -82,11 +75,13 @@ procedure Catch(const ex: Exception);
 implementation
 
 uses Cursor, MyTimers, Inventory, Parser, Anim;
-uses _Log;
+uses _Log, _Assemblies;
 
 var
+    cmdres: string;
     /// Таймер для постоянного восстановления размеров окна
-    UPD_SCR_TMR: MyTimers.Timer;
+    upd_scr_tmr: MyTimers.Timer;
+
 
 procedure TxtClr(clr: Color) := Console.ForegroundColor := clr;
 
@@ -103,7 +98,7 @@ end;
 
 procedure BeepWait(frequency: word; duration: integer);
 begin
-    System.Threading.Tasks.Task.Run(() -> Console.Beep(frequency, duration)).Wait(duration);
+    Console.Beep(frequency, duration);
     sleep(duration);
 end;
 
@@ -223,11 +218,13 @@ begin
     System.GC.WaitForFullGCComplete
 end;
 
-function ReadCmd(prompt: string): string;
+procedure ReadCmd(prompt: string);
 const
     nonalpha: array of char = ('!', '"', '#', '№', '$', '%', '&', '''', '(', ')', '*',
     '+', '-', ',', '.', ':', ';', '<', '=', '>', '?', '@', '^', '`', '{', '}', '~',
     '_', '[', ']', '/', '|', '\', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0');
+var
+    res: string;
 begin
     repeat
         repeat
@@ -238,10 +235,10 @@ begin
             if not NilOrEmpty(prompt) then print(prompt);
             ClrKeyBuffer;
             Cursor.Show;
-            Result := ComputeWithoutUpdScr(() -> ReadlnString);
+            res := ComputeWithoutUpdScr(() -> ReadlnString);
             Cursor.Hide;
             try
-                Result := Result.TrimEnd(#10, #13);
+                res := res.TrimEnd(#10, #13);
             except
                 on exc: Exception do
                 begin
@@ -251,39 +248,42 @@ begin
                     continue
                 end
             end; // try end
-            if Result.IsMatch('[\u0000-\u001F]') then
+            if res.IsMatch('[\u0000-\u001F]') then
             begin
                 TxtClr(Color.Red);
                 writeln('// Недопустимый символ.');
                 _Log.Log('!! ошибка: Недопустимый символ');
                 continue;
             end;
-            if NilOrEmpty(Result.Trim) then
-                Cursor.GoTop(-((Result.Length + prompt.Length + 2) div BufWidth) - 2)
+            if NilOrEmpty(res.Trim) then
+                Cursor.GoTop(-((res.Length + prompt.Length + 2) div BufWidth) - 2)
             else break;
         until False;
         writeln;
-        _Log.Log('> ' + Result);
-        if not Result.IsMatch('[А-я]') then
+        _Log.Log('> ' + res);
+        if not res.IsMatch('[А-я]') then
         begin
             if NilOrEmpty(prompt) then _Log.Log('[] (нет кириллицы)') else _Log.Log($'(префикс:"{prompt}") [] (нет кириллицы)');
-            Result := '';
+            res := '';
             break
         end;
-        for var r: integer := 1 to Result.Length do
-            if nonalpha.Contains(Result[r]) then Result[r] := #127;
-        Result := Result.Remove(#127);
-        Result := Result.Trim.ToLower;
-        while (Result.Contains('  ')) do Result := Result.Replace('  ', ' ');
-        Result := Result.Replace('ё', 'е').Replace('тся', 'ться');
-        Result := ParseCmd(Result);
-        if NilOrEmpty(prompt) then _Log.Log($'[{Result}]') else _Log.Log($'(префикс:"{prompt}") [{Result}]');
-        if (Result = 'INV') or (Result = 'CHECK_INV') then Inventory.Output
+        for var r: integer := 1 to res.Length do
+            if nonalpha.Contains(res[r]) then res[r] := #127;
+        res := res.Remove(#127);
+        res := res.Trim.ToLower;
+        while (res.Contains('  ')) do res := res.Replace('  ', ' ');
+        res := res.Replace('ё', 'е').Replace('тся', 'ться');
+        res := ParseCmd(res);
+        if NilOrEmpty(prompt) then _Log.Log($'[{res}]') else _Log.Log($'(префикс:"{prompt}") [{res}]');
+        if (res = 'INV') or (res = 'CHECK_INV') then Inventory.Output
         else break;
     until False;
     TxtClr(Color.White);
+    cmdres := res;
     prompt := nil;
 end;
+
+function LastCmdResult: string := cmdres;
 
 procedure Catch(const ex: Exception);
 begin
@@ -312,16 +312,16 @@ end;
 
 function ComputeWithoutUpdScr<T>(func: () -> T): T;
 begin
-    UPD_SCR_TMR.Disable;
+    upd_scr_tmr.Disable;
     Result := func;
-    UPD_SCR_TMR.Enable;
+    upd_scr_tmr.Enable;
 end;
 
 procedure DoWithoutUpdScr(proc: procedure);
 begin
-    UPD_SCR_TMR.Disable;
+    upd_scr_tmr.Disable;
     proc();
-    UPD_SCR_TMR.Enable;
+    upd_scr_tmr.Enable;
 end;
 
 function STARTUP: boolean;
@@ -368,8 +368,8 @@ begin
         ReadKey;
         ClrScr;
     end;
-    UPD_SCR_TMR := new MyTimers.Timer(3, UpdScr);
-    UPD_SCR_TMR.Enable;
+    upd_scr_tmr := new MyTimers.Timer(3, UpdScr);
+    upd_scr_tmr.Enable;
     UpdScr;
     Randomize;
     Result := True;
@@ -398,37 +398,17 @@ function SetSuspendState(hiberate, forceCritical, disableWakeEvent: boolean): bo
 
 procedure SleepMode := SetSuspendState(false, true, true);
 
-procedure PrintReferencedAssemblies;
-const
-    DEFAULT_LIBS: array of string = (
-        'System.Speech', // установлена на каждом компе с виндой поэтому ок?
-        'mscorlib',
-        'System',
-        'System.Numerics',
-        'System.Core');
-begin
-    var refs := System.Reflection.Assembly.GetExecutingAssembly.GetReferencedAssemblies;
-    var ext_refs := refs.&Where(q -> not (q.Name in DEFAULT_LIBS));
-    foreach a: System.Reflection.AssemblyName in ext_refs do
-        println('[DEBUG]', 'Подключена сборка', a.Name, a.Version);
-    if ext_refs.Any then
-        writeln('↑↑↑ в релизе не должно быть всех этих внешних сборок! (прогнать через ilmerge)');
-end;
-
 initialization
-    PrintReferencedAssemblies;
     if not STARTUP then Halt(0);
 
 finalization
     if not Console.IsOutputRedirected then _Log.Log('=== стоп');
-    _Log.Cleanup;
-    if (UPD_SCR_TMR <> nil) then
+    _Log.Dispose;
+    if (upd_scr_tmr <> nil) then
     begin
-        UPD_SCR_TMR.Destroy;
-        UPD_SCR_TMR := nil;
+        upd_scr_tmr.Destroy;
+        upd_scr_tmr := nil;
     end;
-    CMDRES := nil;
-    MENURES := nil;
     CollectGarbage;
 
 end.

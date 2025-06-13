@@ -1,7 +1,22 @@
 ﻿unit Plot_Prologue;
 
-uses Procs, Chat, Inventory, Items, Menu, Anim, ButtonMashMinigames,
-    Achs, Matrix, Tutorial, Dialogue, Scenes;
+interface
+
+uses Scenes;
+
+function PART1: boolean;
+function PART2: boolean;
+var
+    START_SCENE := Scenes.Link(
+        new PlayableScene(PART1),
+        new PlayableScene(PART2));
+
+
+
+implementation
+
+uses Procs, Chat, Inventory, Items, Menu, Anim, ButtonMashMinigames, Dialogue,
+    Achs, Matrix, Tutorial;
 
 var
     Route: (SOLO, RITA, TRIP, ROMA);
@@ -40,8 +55,8 @@ var
         writeln('Кому ты напишешь?');
         while True do
         begin// while begin
-            CMDRES := ReadCmd('написать');
-            case CMDRES of // case2 begin
+            ReadCmd('написать');
+            case LastCmdResult of // case2 begin
                 'VASYA':
                     if TextedVasya then writeln('Ты уже писал Васе!') else
                     begin
@@ -196,8 +211,8 @@ var
             if (Inventory.Has(Items.Hdd) and not used_empty_hdd) then Menu.Load('подключить жёсткий диск');
             if not Inventory.IsEmpty then Menu.Load('проверить инвентарь');
             Menu.Load(torrenting_movies ? 'отойти от компьютера' : 'выключить компьютер');
-            MENURES := Menu.UnloadSelect;
-            case MENURES of // case begin
+            Menu.UnloadSelect;
+            case Menu.LastResult of // case begin
                 {-} 'написать друзьям': Chats;
                 {-} 'смотреть рутуб':
                     begin
@@ -344,8 +359,8 @@ var
         writeln('Под столом? Под шкафом? Под кроватью? На кухне?');
         writeln('Детектив приступает к поиску.');
         repeat
-            CMDRES := ReadCmd('проверить');
-            case CMDRES of
+            ReadCmd('проверить');
+            case LastCmdResult of
                 'BOX', 'BOX_BOX':
                     begin
                         writeln('Детектив тщательно роется в ящике, проверяя каждую вещь.');
@@ -472,8 +487,8 @@ begin
     ClrKeyBuffer;
     while True do
     begin// while begin
-        CMDRES := ReadCmd.Replace('тьюб', 'туб');
-        case CMDRES of // case begin
+        ReadCmd;
+        case LastCmdResult of // case begin
             {-} 'CHECK':
                 begin
                     writeln('Сейчас ты стоишь посреди своей комнаты.');
@@ -526,7 +541,7 @@ begin
                 if broke_laptop then writeln('Ты сломал компьютер!') else
                 if burned_laptop then writeln('Ты спалил компьютер!') else
                 if charged_laptop then
-                    if CMDRES.Contains('HDD') then
+                    if LastCmdResult.Contains('HDD') then
                         if Inventory.Has(Items.Hdd) then Computer else
                         begin
                             if not broke_box then writeln('Ты достаёшь жёсткий диск из ящика с кучей старых запылившихся вещей.');
@@ -582,14 +597,14 @@ begin
             {-} 'CHECK_BOTTLE', 'CHECK_COLA', 'GET_BOTTLE', 'GET_COLA', 'GET_BOTTLE_COLA', 'GET_COLA_BOTTLE',
             'DRINK_BOTTLE', 'DRINK_COLA', 'DRINK_BOTTLE_COLA', 'DRINK_COLA_BOTTLE':
                 if Inventory.Has(Items.Cola) then
-                    if CMDRES.StartsWith('DRINK') then writeln('Пожалуй, это тебе ещё пригодится...')
+                    if LastCmdResult.StartsWith('DRINK') then writeln('Пожалуй, это тебе ещё пригодится...')
                     else writeln('Ты уже взял колу.')
                 else begin
                     print('Ты берёшь');
                     if not broke_table then print('со стола');
                     writeln('недопитую бутылку колы.');
                     Inventory.Obtain(Items.Cola);
-                    if CMDRES.StartsWith('DRINK') then writeln('Пожалуй, это тебе ещё пригодится...');
+                    if LastCmdResult.StartsWith('DRINK') then writeln('Пожалуй, это тебе ещё пригодится...');
                 end;
             {-} 'SIT_BED', 'SLEEP', 'SLEEP_BED', 'GO_BED', 'GOUP_BED', 'OPEN_BED', 'GO_SLEEP', 'SIT_SLEEP', 'BED_SLEEP':
                 if broke_bed then writeln('Ты сломал кровать!')
@@ -751,8 +766,8 @@ begin
     if not Tutorial.ElevatorH.Shown then writeln('Что если попробовать сломать эту штуку...');
     while True do
     begin// while begin
-        CMDRES := ReadCmd;
-        case CMDRES of
+        ReadCmd;
+        case LastCmdResult of
             {-}'CHECK', 'GET':
                 if opened_hatch then writeln('Возможно, стоит подняться наверх?')
                 else if Inventory.Has(Items.Shard) then
@@ -762,7 +777,8 @@ begin
             {-}'CALL', 'PRESS', 'CALL_PRESS', 'PRESS_CALL':
                 if tried_emergency_button then writeln('Никто не отвечает, сколько ты не жал бы на кнопку.')
                 else begin
-                    if CMDRES = 'PRESS' then writeln('Ты пытаешься понажимать какие-нибудь кнопки. Ничего не работает...');
+                    if LastCmdResult.Equals('PRESS') then
+                        writeln('Ты пытаешься понажимать какие-нибудь кнопки. Ничего не работает...');
                     writeln('Ты нащупываешь кнопку связи с диспетчером и жмёшь её.');
                     writeln('Через несколько минут тебе наконец отвечает какая-то сварливая тётка.');
                     writeln('Она мерзким голосом объявляет, что сегодня лифтёры не приедут.');
@@ -787,17 +803,17 @@ begin
             'THROW_COLA', 'THROW_BOTTLE', 'THROW_COLA_BOTTLE', 'THROW_BOTTLE_COLA', 'GET_DOG_THROW_MIRROR':
                 if Inventory.Has(Items.Shard) then writeln('Ты уже сломал зеркало.')
                 else begin
-                    if CMDRES.IsMatch('^TAKEOFF|GET_M') then
+                    if LastCmdResult.IsMatch('^TAKEOFF|GET_M') then
                     begin
                         writeln('Ты пытаешься снять зеркало со стены, но оно наглухо прикручено.');
                         writeln('Пытаясь оторвать, ты трясешь его... и так сильно, что оно лопается!');
                     end
-                    else if CMDRES.Contains('DOG') then
+                    else if LastCmdResult.Contains('DOG') then
                     begin
                         writeln('Ты хватаешь Юпитера и со всей силы кидаешь его в зеркало.');
                         writeln('Оно с треском разбивается, а собака громко взвизгивает и падает на пол!');
                     end
-                    else if CMDRES.IsMatch('COLA|BOTTLE') then
+                    else if LastCmdResult.Contains('COLA') or LastCmdResult.Contains('BOTTLE') then
                         if Inventory.Has(Items.Cola) then println('Ты бросаешь бутылку с колой прямо в зеркало, и оно разбивается.')
                         else begin
                             writeln('Так не пойдёт. Нужно попробовать что-нибудь ещё.');
@@ -869,8 +885,8 @@ begin
     writeln('Перед тобой лестница, лифт и окно, в котором виднеется вечно серое Чертаново.');
     while True do
     begin//while begin
-        MENURES := Menu.FastSelect('спуститься по лестнице', 'вызвать лифт', 'прыгнуть в окно');
-        case MENURES of // case begin
+        Menu.FastSelect('спуститься по лестнице', 'вызвать лифт', 'прыгнуть в окно');
+        case Menu.LastResult of // case begin
             {-} 'спуститься по лестнице':
                 begin
                     writeln('Ты спускаешься вниз по лестничной клетке и выходишь из подъезда.');

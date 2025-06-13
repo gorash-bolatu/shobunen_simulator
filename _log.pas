@@ -2,20 +2,22 @@
 
 interface
 
-procedure Init(debug: boolean);
+procedure Init;
 procedure Log(const strg: string);
 procedure PushKey(k: System.ConsoleKey);
 procedure DumpThmera;
-procedure Cleanup;
+procedure Dispose;
 
 var
     mInputs, mTime: int64;
     Val: List<int64> := new List<int64>;
     WarnedLanguage, WarnedWindowSize, WarnedUnix: boolean;
 
+
+
 implementation
 
-uses Procs, Achievements, Cursor, TextToSpeech, Versioning;
+uses Procs, Achievements, Cursor, TextToSpeech, Menu, _Settings;
 
 const
     ThmeraCooldown: word = MaxWord;
@@ -25,7 +27,6 @@ var
     CurDrive: System.IO.DriveInfo;
     LastTimeOfThmeraCall: longword;
     CharList: List<string> := new List<string>;
-    DEBUGMODE: boolean;
     DISABLED: boolean := True;
 
 function NotEnoughSpace: boolean := (CurDrive.AvailableFreeSpace < 1000);
@@ -118,7 +119,7 @@ begin
     var s1: string := Achievements.DebugString;
     var s2: string := string.Join(' ',
         _sepstr, DateTime.Now.ToString('HH mm ss'), $'({ElapsedMS})', CurDrive.Name, CurDrive.AvailableFreeSpace.ToString, $'w{Console.WindowWidth}x{Console.WindowHeight}', $'b{BufWidth}x{Console.BufferHeight}');
-    var s3: string := $'CMDRES [{CMDRES}] MENURES [{MENURES}] TTS {DO_TTS.ToString.First}';
+    var s3: string := $'CMDRES [{LastCmdResult}] MENURES [{Menu.LastResult}] TTS {DO_TTS.ToString}';
     var ThmeraStr: string := s2 + NewLine + _sepstr + s3;
     if not NilOrEmpty(s1) then ThmeraStr += (NewLine + _sepstr + s1);
     writeln(Txt, ThmeraStr);
@@ -162,14 +163,13 @@ begin
     end;
 end;
 
-procedure Init(debug: boolean);
+procedure Init;
 var
     sep: char := System.IO.Path.DirectorySeparatorChar;
     path: string;
     name: string := ('SHOBUSIM_' + DateTime.Now.ToString('yyMMdd-HHmmss') + '.log');
     old_file_exists: boolean;
 begin
-    DEBUGMODE := debug;
     if DEBUGMODE then
     begin
         writeln('лог? (Y/N)');
@@ -292,7 +292,7 @@ begin
     writeln;
 end;
 
-procedure Cleanup;
+procedure Dispose;
 begin
     TryClose;
     CharList.Clear;

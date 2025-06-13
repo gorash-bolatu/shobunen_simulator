@@ -2,14 +2,13 @@
 // игра в жанре text adventure/interactive fiction про саню шобунена
 // язык: PascalABC.Net
 
-{$DEFINE DOOBUG} // todo
 program shobu_sim;
 {$APPTYPE console}
 {$TITLE Симулятор Шобунена}
 {$VERSION Alpha v4} // TODO
 {$STRING_NULLBASED-}
 
-uses Procs, Scenes, Inventory, Anim, Cursor, Achievements, Chat, Routes, Achs, Versioning;
+uses Procs, Scenes, Inventory, Anim, Cursor, Achievements, Chat, Achs, _Settings;
 uses Plot_Prologue;
 uses _Log;
 
@@ -78,28 +77,26 @@ end;
 
 {$ENDREGION}
 
-{$REGION сюжет}
-var
-    
-    sStart := Scenes.Link(
-    new PlayableScene(PART1),
-    new PlayableScene(PART2)
-    )
-    as Scene;
-
-{$ENDREGION}
-
 {$REGION gameloop}
 function GAMELOOP: boolean;
 begin
     Result := True;
     Inventory.Reset;
-    foreach current_scene: Scene in sStart.Chain do
-    begin
+    foreach current_scene: Scene in START_SCENE.Chain do
         // части просто проходимые без геймоверов:
         if (current_scene is Cutscene) then (current_scene as Cutscene).Run
         // части с возможностью геймовера:
         else begin
+            if (current_scene <> START_SCENE) then
+            begin
+                writeln;
+                Anim.Next3;
+                TxtClr(Color.Green);
+                writeln('Контрольная точка.');
+                Anim.Next1;
+                writelnx2;
+                Console.Beep;  
+            end;
             Inventory.Save;
             while not (current_scene as PlayableScene).Passed() do
             begin
@@ -134,19 +131,12 @@ begin
                     exit;
                 end;
             end;
-            writeln;
-            Anim.Next3;
-            TxtClr(Color.Green);
-            writeln('Контрольная точка.');
-            Anim.Next1;
-            writelnx2;
-            Console.Beep;
         end;
-    end;
+    Anim.Next3;
     TxtClr(Color.Cyan);
     writeln('<=== TO BE CONTINUED...');
     writeln;
-    Anim.Next3;
+    Anim.Next1;
     Achievements.DisplayAll;
     TxtClr(Color.Green);
     writeln('Конец демо-версии. Перезапустить? (Y/N)');
@@ -173,24 +163,18 @@ begin
     try
         Console.Title := 'СИМУЛЯТОР ШОБУНЕНА ' + VERSION.ToLower; 
         
-        {$IFDEF DOOBUG}
-        writeln('DEBUG MODE');
-        Console.Title += ' [DEBUG MODE]';
-        WriteEqualsLine;
-        Chat.Skip := True;
-        {$ELSE}
-        TITLESCREEN;
-        {$ENDIF}
+        if DEBUGMODE then
+        begin
+            writeln('DEBUG MODE');
+            Console.Title += ' [DEBUG MODE]';
+            WriteEqualsLine;
+            Chat.Skip := True;
+        end
+        else TITLESCREEN;
         
-        {$IFDEF DOOBUG}
-        _Log.Init(True);
-        {$ELSE}
-        _Log.Init(False);
-        {$ENDIF}
+        _Log.Init;
         
-        {$IFNDEF DOOBUG}
-        WHATSNEW;
-        {$ENDIF}
+        if not DEBUGMODE then WHATSNEW;
         
         while GAMELOOP() do;
         writeln;

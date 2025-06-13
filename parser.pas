@@ -1,6 +1,6 @@
-﻿{$DEFINE DOOBUG} // todo
-{$REFERENCE LightJson.dll} // https://github.com/MarcosLopezC/LightJson
+﻿{$REFERENCE LightJson.dll} // https://github.com/MarcosLopezC/LightJson
 {$RESOURCE parse_cmd.json}
+{$DEFINE MEASURE_JSON_PARSE} // TODO
 unit Parser;
 
 interface
@@ -77,7 +77,7 @@ begin
     Result := True;
 end;
 
-{$IFDEF DOOBUG}
+{$IFDEF MEASURE_JSON_PARSE}
 
 function FetchAndParse(const resource_name: string): LightJson.JsonArray;
 begin

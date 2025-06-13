@@ -1,5 +1,4 @@
-﻿{$DEFINE DOOBUG} // todo
-unit SlashingMinigame;
+﻿unit SlashingMinigame;
 
 interface
 
@@ -343,21 +342,22 @@ end;
 
 procedure Load(params lines: array of string);
 begin
-    {$IFDEF DOOBUG}
-    if (lines.Length = 0) then
-        raise new Exception('НЕТ СТРОК В SLASHINGMINIGAME.LOAD()');
-    if lines.Any(q -> q.Length = 0) then
-        raise new Exception('ПУСТАЯ СТРОКА В SLASHINGMINIGAME.LOAD()');
-    if (lines.Length * 4 >= BOX_WIDTH) then
-        raise new Exception('SLASHINGMINIGAME.LOAD(): СЛИШКОМ МНОГО ВЕРТ. СТРОК В'
-                                                + $' (МАКС {(BOX_WIDTH div 4) - 1} ПОЛУЧЕНО {lines.Length})');
-    if (lines.Length * 2 >= BOX_HEIGHT) then
-        raise new Exception('SLASHINGMINIGAME.LOAD(): СЛИШКОМ МНОГО ГОРИЗ. СТРОК'
-                                                + $' (МАКС {(BOX_HEIGHT div 2) - 1} ПОЛУЧЕНО {lines.Length})');
-    if (lines.Max(q -> q.Length) > BOX_WIDTH - 6) then
-        raise new Exception('SLASHINGMINIGAME.LOAD(): СТРОКА "' + lines.MaxBy(q -> q.Length)
-                                                + '" НЕ ВЛЕЗАЕТ ПРИ DIRECTION=left/right');
-    {$ENDIF}
+    if DEBUGMODE then
+    begin
+        if (lines.Length = 0) then
+            raise new Exception('НЕТ СТРОК В SLASHINGMINIGAME.LOAD()');
+        if lines.Any(q -> q.Length = 0) then
+            raise new Exception('ПУСТАЯ СТРОКА В SLASHINGMINIGAME.LOAD()');
+        if (lines.Length * 4 >= BOX_WIDTH) then
+            raise new Exception('SLASHINGMINIGAME.LOAD(): СЛИШКОМ МНОГО ВЕРТ. СТРОК В'
+                            + $' (МАКС {(BOX_WIDTH div 4) - 1} ПОЛУЧЕНО {lines.Length})');
+        if (lines.Length * 2 >= BOX_HEIGHT) then
+            raise new Exception('SLASHINGMINIGAME.LOAD(): СЛИШКОМ МНОГО ГОРИЗ. СТРОК'
+                            + $' (МАКС {(BOX_HEIGHT div 2) - 1} ПОЛУЧЕНО {lines.Length})');
+        if (lines.Max(q -> q.Length) > BOX_WIDTH - 6) then
+            raise new Exception('SLASHINGMINIGAME.LOAD(): СТРОКА "' + lines.MaxBy(q -> q.Length)
+                            + '" НЕ ВЛЕЗАЕТ ПРИ DIRECTION=left/right');
+    end;
     if (loaded = nil) then loaded := new List<array of string>;
     loaded.Add(lines);
 end;
@@ -368,10 +368,10 @@ var
 begin
     try
         upd_health_tmr := new MyTimers.Timer(UPD_HP_INTERVAL, UpdateHealth);
-        {$IFDEF DOOBUG}
-        if (loaded = nil) or (loaded.Count = 0) then
-            raise new Exception('НЕ ЗАГРУЖЕНЫ ПАРАМЕТРЫ ДЛЯ SlashingMinigame.Game() ЧЕРЕЗ SlashingMinigame.Load()');
-        {$ENDIF}
+        if DEBUGMODE then
+            if (loaded = nil) or (loaded.Count = 0) then
+                raise new Exception(
+                    'НЕ ЗАГРУЖЕНЫ ПАРАМЕТРЫ ДЛЯ SlashingMinigame.Game() ЧЕРЕЗ SlashingMinigame.Load()');
         enemy := opponent.ToString.Replace('_', ' ').ToUpper;
         health_cap := BOX_WIDTH - (6 + enemy.Length);
         health := health_cap div 2;

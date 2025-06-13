@@ -1,5 +1,4 @@
-﻿{$DEFINE DOOBUG} // todo
-unit Scenes;
+﻿unit Scenes;
 
 
 type

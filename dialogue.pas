@@ -1,5 +1,4 @@
-﻿{$DEFINE DOOBUG} // todo
-unit Dialogue;
+﻿unit Dialogue;
 
 interface
 
@@ -13,7 +12,7 @@ procedure Echo;
 
 implementation
 
-uses Anim, Draw, Cursor;
+uses Anim, Draw, Cursor, _Settings;
 
 var
     DialogueOpened: boolean;
@@ -44,9 +43,8 @@ end;
 
 procedure Close;
 begin
-    {$IFDEF DOOBUG}
+    if DEBUGMODE then
     if not DialogueOpened then raise new Exception('ПОВТОРНЫЙ DIALOGUE.CLOSE()');
-    {$ENDIF}
     DialogueOpened := False;
     writelnx2;
     TxtClr(Color.White);
@@ -60,13 +58,15 @@ begin
     var longest_phrase: string := phrases.MaxBy(q -> q.Length);
     DialogueWidth := longest_phrase.Length + 3;
     if BulletTimeMode then DialogueWidth -= 2;
-            {$IFDEF DOOBUG}
-    if (DialogueWidth + 3) > MIN_WIDTH then raise new Exception(
-        'СЛИШКОМ БОЛЬШАЯ СТРОКА ДИАЛОГА: "' + longest_phrase + '" [' + longest_phrase.Length + '].');
-            {$ENDIF}
+    if DEBUGMODE then
+        if (DialogueWidth + 3) > MIN_WIDTH then raise new Exception(
+            'СЛИШКОМ БОЛЬШАЯ СТРОКА ДИАЛОГА: "' + longest_phrase
+            + '" [' + longest_phrase.Length + '].');
     TxtClr(Color.White);
-    if (DialogueWidth = NameWidth) then writeln('├', '─' * NameWidth, '┤')
-    else if (DialogueWidth < NameWidth) then writeln('├', '─' * DialogueWidth, '┬', '─' * (NameWidth - DialogueWidth - 1), '┘')
+    if (DialogueWidth = NameWidth) then
+        writeln('├', '─' * NameWidth, '┤')
+    else if (DialogueWidth < NameWidth) then
+        writeln('├', '─' * DialogueWidth, '┬', '─' * (NameWidth - DialogueWidth - 1), '┘')
     else writeln('├', '─' * NameWidth, '┴', '─' * (DialogueWidth - NameWidth - 1), '┐');
     foreach n: string in phrases do
     begin
