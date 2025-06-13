@@ -24,6 +24,6 @@
     <Item Type="SourceFile" Name="slashingminigame.pas" Path="slashingminigame.pas" />
     <Item Type="SourceFile" Name="texttospeech.pas" Path="texttospeech.pas" />
     <Item Type="SourceFile" Name="tutorial.pas" Path="tutorial.pas" />
-    <Item Type="SourceFile" Name="versioning.pas" Path="versioning.pas" />
+    <Item Type="SourceFile" Name="_settings.pas" Path="_settings.pas" />
   </Items>
 </Project>
