@@ -16,18 +16,11 @@ type
         begin
             ListOfAll.Add(self);
         end;
+    
     public
         destructor Destroy;
         begin
             self.SetNext(nil);
-        end;
-        function Chain: sequence of Scene;
-        begin
-            var n: Scene := self;
-            repeat
-                yield n;
-                n := n.GetNext;
-            until n = nil;
         end;
     end;
     
@@ -41,11 +34,13 @@ type
             inherited Create;
             body := proc;
         end;
+        
         destructor Destroy;
         begin
             inherited Destroy;
             body := nil;
         end;
+        
         procedure Run := body();
     end;// class end
     
@@ -59,11 +54,13 @@ type
             inherited Create;
             boolfunc := func;
         end;
+        
         destructor Destroy;
         begin
             inherited Destroy;
             boolfunc := nil;
         end;
+        
         function Passed: boolean := boolfunc();
     end;//class end
     
@@ -78,6 +75,7 @@ type
             inherited Create;
             selectfunc := selector;
         end;
+        
         destructor Destroy;
         begin
             inherited Destroy;
@@ -95,6 +93,16 @@ begin
             scenearr[i].SetNext(scenearr[i + 1]);
         Result := scenearr[0];
     end;
+end;
+
+function Chain(self: Scene): sequence of Scene; extensionmethod;
+begin
+    var n: Scene := self;
+    repeat
+        while (n is Fork) do n := n.GetNext;
+        yield n;
+        n := n.GetNext;
+    until n = nil;
 end;
 
 initialization
