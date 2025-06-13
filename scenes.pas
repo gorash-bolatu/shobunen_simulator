@@ -1,146 +1,109 @@
 ﻿{$DEFINE DOOBUG} // todo
 unit Scenes;
 
-interface
 
 type
     
     /// НЕ НАСЛЕДОВАТЬ
-    Nextable = abstract class
+    Scene = abstract class
     private
-        fNext: Nextable := nil;
-        function GetNext: Nextable; virtual;
+        static ListOfAll: List<Scene>;
+        next: Scene;
+        function GetNext: Scene; virtual := next;
+        procedure SetNext(const value: Scene) := self.Next := value;
     protected
-        constructor Create(n: string);
-        constructor Create;
-        destructor Destroy;
-        function Chain: sequence of Nextable;
-        property Next: Nextable read GetNext write fNext;
+        constructor Create();
+        begin
+            ListOfAll.Add(self);
+        end;
     public
-        name: string; // todo убрать когда не будет логов
+        destructor Destroy;
+        begin
+            self.SetNext(nil);
+        end;
+        function Chain: sequence of Scene;
+        begin
+            var n: Scene := self;
+            repeat
+                yield n;
+                n := n.GetNext;
+            until n = nil;
+        end;
     end;
     
-    /// НЕ НАСЛЕДОВАТЬ
-    Scene = abstract class(Nextable)
-    protected
-        constructor Create(const scenename: string);
-    public
-        function Scenes: sequence of Scene;
-    end;// class end
-    
     /// класс сцены проходимой без геймоверов 
-    /// требует определения процедуры Body с логикой собственно сцены
-    Cutscene = abstract class(Scene)
+    Cutscene = sealed class(Scene)
+    private
+        body: procedure;
     public
-        constructor Create(const name: string);
-        /// процедура с логикой сцены
-        procedure Body; abstract;
+        constructor Create(proc: procedure);
+        begin
+            inherited Create;
+            body := proc;
+        end;
+        destructor Destroy;
+        begin
+            inherited Destroy;
+            body := nil;
+        end;
+        procedure Run := body();
     end;// class end
     
     /// класс сцены, в которой можно получить геймовер
-    /// требует определения функции Passed (возвращает boolean) с логикой сцены
-    /// True если сцена пройдена, False если во время сцены получен геймовер
-    PlayableScene = abstract class(Scene)
+    PlayableScene = sealed class(Scene)
+    private
+        boolfunc: function: boolean;
     public
-        constructor Create(const name: string);
-        /// функция с логикой сцены
-        /// возвращает:
-        ///     - True (если сцена пройдена)
-        ///     - False (если во время сцены получен геймовер)
-        function Passed: boolean; abstract;
+        constructor Create(func: function: boolean);
+        begin
+            inherited Create;
+            boolfunc := func;
+        end;
+        destructor Destroy;
+        begin
+            inherited Destroy;
+            boolfunc := nil;
+        end;
+        function Passed: boolean := boolfunc();
     end;//class end
     
     /// класс развилки с выбором сцены
-    /// требует определения функции GetNext, возвращающей Nextable
-    /// (Nextable'ом может быть и Cutscene, и PlayableScene, и другой Fork)
-    /// в GetNext логика выбора следующей сцены (какой Nextable идёт следующим)
-    Fork = abstract class(Nextable)
+    Fork = sealed class(Scene)
+    private
+        selectfunc: function: Scene;
+        function GetNext: Scene; override := selectfunc();
     public
-        constructor Create(const name: string);
-        procedure SelectAsNext(const n: Nextable);
-        /// функция с логикой выбора следующей сцены/развилки
-        function GetNext: Nextable; abstract; override;
+        constructor Create(selector: function: Scene);
+        begin
+            inherited Create;
+            selectfunc := selector;
+        end;
+        destructor Destroy;
+        begin
+            inherited Destroy;
+            selectfunc := nil;
+        end;
     end;
-// type end
 
-function Link(params scenes_and_forks: array of Nextable): Nextable;
+// TYPE END
 
-
-
-implementation
-
-var
-    ListOfAll: List<Nextable> := new List<Nextable>;
-
-constructor Nextable.Create() := ListOfAll.Add(self);
-
-constructor Nextable.Create(const n: string);// todo убрать когда не будет логов
+function Link(params scenearr: array of Scene): Scene;
 begin
-    self.name := n;
-    ListOfAll.Add(self);
-end;
-
-destructor Nextable.Destroy;
-begin
-    self.name := nil;
-    self.Next := nil;
-end;
-
-function Nextable.GetNext: Nextable := self.fNext;
-
-function Nextable.Chain: sequence of Nextable;
-begin
-    var n: Nextable := self;
-    repeat
-        yield n;
-        n := n.Next;
-    until n = nil;
-end;
-
-constructor Scene.Create(const scenename: string) := inherited Create(scenename); // todo убрать когда не будет логов
-
-function Scene.Scenes: sequence of Scene;
-begin
-    foreach n: Nextable in self.Chain do
-        if n is Scene then
-            yield n as Scene;
-end;
-
-constructor Cutscene.Create(const name: string);// todo убрать когда не будет логов
-begin
-    inherited Create(name);
-end;
-
-constructor PlayableScene.Create(const name: string);// todo убрать когда не будет логов
-begin
-    inherited Create(name);
-end;
-
-constructor Fork.Create(const name: string);// todo тоже убрать
-begin
-    inherited Create(name);
-end;
-
-procedure Fork.SelectAsNext(const n: Nextable) := self.Next := n;
-
-function Link(params scenes_and_forks: array of Nextable): Nextable;
-begin
-    if (scenes_and_forks.Length = 0) then Result := nil
+    if (scenearr.Length = 0) then Result := nil
     else begin
-        for var i: integer := 0 to (scenes_and_forks.Length - 2) do
-            scenes_and_forks[i].Next := scenes_and_forks[i + 1];
-        Result := scenes_and_forks[0];
+        for var i: integer := 0 to (scenearr.Length - 2) do
+            scenearr[i].SetNext(scenearr[i + 1]);
+        Result := scenearr[0];
     end;
 end;
-
-
 
 initialization
+    Scene.ListOfAll := new List<Scene>;
 
 finalization
-    if (ListOfAll = nil) then exit;
-    foreach i: Nextable in ListOfAll do i.Destroy;
-    ListOfAll.Clear;
-    ListOfAll := nil;
+    if (Scene.ListOfAll = nil) then exit;
+    foreach i: Scene in Scene.ListOfAll do i.Destroy;
+    Scene.ListOfAll.Clear;
+    Scene.ListOfAll := nil;
 
 end.

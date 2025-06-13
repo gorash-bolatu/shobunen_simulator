@@ -82,8 +82,9 @@ end;
 var
     
     sStart := Scenes.Link(
-    new PART1('комната'),
-    new PART2('подъезд'))
+    new PlayableScene(PART1),
+    new PlayableScene(PART2)
+    )
     as Scene;
 
 {$ENDREGION}
@@ -93,13 +94,12 @@ function GAMELOOP: boolean;
 begin
     Result := True;
     Inventory.Reset;
-    foreach current_scene: Scene in sStart.Scenes do
+    foreach current_scene: Scene in sStart.Chain do
     begin
         // части просто проходимые без геймоверов:
-        if (current_scene is Cutscene) then (current_scene as Cutscene).Body()
+        if (current_scene is Cutscene) then (current_scene as Cutscene).Run
         // части с возможностью геймовера:
         else begin
-            _Log.Log('=== часть: ' + current_scene.name);
             Inventory.Save;
             while not (current_scene as PlayableScene).Passed() do
             begin
@@ -141,7 +141,6 @@ begin
             Anim.Next1;
             writelnx2;
             Console.Beep;
-            _Log.Log('=== чекпоинт: ' + current_scene.Name);
         end;
     end;
     TxtClr(Color.Cyan);
