@@ -219,7 +219,6 @@ begin
                     _Log.Log($'=== спящий режим: fail{NewLine}!! {excp.ToString}');
             end;
         finally
-            ReadKey;
             TxtClr(Color.White);
             BgClr(Color.Black);
             ClrScr;
@@ -230,7 +229,11 @@ begin
                 'Но даже выбрав красную таблетку, ты всё же предпочёл вернуться оттуда в Симулятор',
                 'Что ж. Тогда дальше тебе решать, что здесь делать..');
             ClrScr;
-            TextToSpeech.Dispose;
+            {$omp parallel sections}
+            begin
+                NextSlide;
+                TextToSpeech.Dispose;
+            end;
         end;
     end;
 end;

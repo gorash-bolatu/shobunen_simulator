@@ -103,7 +103,10 @@ begin
         writeln(TAB);
         Cursor.GoTop(-1);
         if DO_TTS then
-            if synth.IsSpeaking and (synth.Rate < 9) then synth.Rate += 1;
+            case synth.IsSpeaking of
+                False: if (synth.Rate > 1) then synth.Rate -= 1;
+                True: if (synth.Rate < 9) then synth.Rate += 1;
+            end; 
     end;
 end;
 

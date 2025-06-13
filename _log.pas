@@ -92,6 +92,23 @@ end;
 
 procedure PushKey(k: Key) := CharList.Add(k.ToString);
 
+procedure DumpCharList;
+const
+    max_char_cap: byte = 23;
+begin
+    if (CharList.Count > 0) then
+    begin
+        writeln(Txt, '-' * 45);
+        while CharList.Count > max_char_cap do
+        begin
+            writeln(Txt, string.Join(' ', CharList.Take(max_char_cap)));
+            CharList := CharList[max_char_cap:CharList.Count]; // срез
+        end;
+        writeln(Txt, string.Join(' ', CharList), NewLine, '-' * 45);
+        CharList.Clear
+    end;
+end;
+
 procedure DumpThmera;
 const
     _sepstr: string = #9#9#9'``` ';
@@ -108,8 +125,6 @@ begin
 end;
 
 procedure Log(const strg: string);
-const
-    max_char_cap: byte = 23;
 begin
     if DISABLED then exit;
     var where_file: boolean := not FileExists(Txt.Name);
@@ -122,17 +137,7 @@ begin
         end
         else begin
             if where_file then writeln(Txt, Header, NewLine, '!! файл был удалён?');
-            if (CharList.Count > 0) then
-            begin
-                writeln(Txt, '-' * 45);
-                while CharList.Count > max_char_cap do
-                begin
-                    writeln(Txt, string.Join(' ', CharList.Take(max_char_cap)));
-                    CharList := CharList[max_char_cap:CharList.Count]; // срез
-                end;
-                writeln(Txt, string.Join(' ', CharList), NewLine, '-' * 45);
-                CharList.Clear
-            end;
+            DumpCharList;
             DumpThmera;
             writeln(Txt, strg);
             TryFlush;
