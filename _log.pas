@@ -5,6 +5,7 @@ interface
 procedure Init;
 procedure Log(const strg: string);
 procedure PushKey(k: System.ConsoleKey);
+procedure PushString(const s: string);
 procedure DumpThmera;
 procedure Dispose;
 
@@ -92,6 +93,8 @@ begin
 end;
 
 procedure PushKey(k: Key) := CharList.Add(k.ToString);
+
+procedure PushString(const s: string) := CharList.Add(s);
 
 procedure DumpCharList;
 const

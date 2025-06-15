@@ -74,7 +74,7 @@ begin
 end;
 
 initialization
-    if not DEBUGMODE then exit;
+    if Console.IsOutputRedirected or (not DEBUGMODE) then exit;
     println('[DEBUG]', 'Ресурсы:', '[' + GetAllResourceNames.JoinToString(', ') + ']');
     foreach res: string in GetAllResourceNames do ValidateResource(res);
 

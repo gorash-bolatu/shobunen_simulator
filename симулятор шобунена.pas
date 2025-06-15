@@ -8,9 +8,9 @@ program shobu_sim;
 {$VERSION Alpha v4} // TODO
 {$STRING_NULLBASED-}
 
-uses Procs, Scenes, Inventory, Anim, Cursor, Achievements, Chat, Achs, _Settings;
+uses Procs, Scenes, Inventory, Anim, Cursor, Achievements, Chat, Achs;
 uses Plot_Prologue;
-uses _Log;
+uses _Log, _Settings;
 
 {$REGION интро}
 

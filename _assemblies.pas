@@ -20,6 +20,6 @@ begin
 end;
 
 initialization
-    if DEBUGMODE then PrintReferencedAssemblies;
+    if not Console.IsOutputRedirected and DEBUGMODE then PrintReferencedAssemblies;
 
 end. 

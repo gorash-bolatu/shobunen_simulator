@@ -29,6 +29,7 @@ implementation
 //]
 
 uses Procs, Resources;
+uses _Log;
 
 var
     cmd_json, tts_json: LightJson.JsonArray;
@@ -81,21 +82,42 @@ end;
 
 function FetchAndParse(const resource_name: string): LightJson.JsonArray;
 begin
-    write('[DEBUG] ', resource_name, ': Загрузка... ');
+    var res: System.Text.StringBuilder := new System.Text.StringBuilder;
+    if not Console.IsOutputRedirected then
+    begin
+        res.Append('[Parser] ');
+        res.Append(resource_name);
+        res.Append(': Загрузка... ');
+    end;
     var watch := new Stopwatch;
     watch.Start;
     var json: string := TextFromResourceFile(resource_name);
     watch.Stop;
-    write(watch.Elapsed.TotalMilliseconds, 'ms ', 'Парсинг... ');
+    if not Console.IsOutputRedirected then
+    begin
+        res.Append(watch.Elapsed.TotalMilliseconds);
+        res.Append('ms Парсинг... ');
+    end;
     watch.Restart;
     Result := LightJson.JsonValue.Parse(json).AsJsonArray;
     watch.Stop;
-    write(watch.Elapsed.TotalMilliseconds, 'ms ', 'Проверка... ');
+    if not Console.IsOutputRedirected then
+    begin
+        res.Append(watch.Elapsed.TotalMilliseconds);
+        res.Append('ms Проверка... ');
+    end;
     watch.Restart;
     foreach i: LightJson.JsonValue in Result do
         if not IsValidEntry(i) then raise new LightJson.Serialization.JsonParseException;
     watch.Stop;
-    writeln(watch.Elapsed.TotalMilliseconds, 'ms');
+    if not Console.IsOutputRedirected then
+    begin
+        res.Append(watch.Elapsed.TotalMilliseconds);
+        res.Append('ms');
+    end;
+    _Log.PushString(res.ToString);
+    res.Clear;
+    res := nil;
     watch := nil;
 end;
 
@@ -113,6 +135,9 @@ end;
 
 initialization
     cmd_json := FetchAndParse('parse_cmd.json');
+    {$IFDEF MEASURE_JSON_PARSE}
+    _Log.PushString(NewLine);
+    {$ENDIF}
     tts_json := FetchAndParse('parse_tts.json');
 
 finalization
