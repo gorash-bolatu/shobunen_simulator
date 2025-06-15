@@ -10,6 +10,7 @@ program shobu_sim;
 
 uses Procs, Scenes, Inventory, Anim, Cursor, Achievements, Chat, Achs;
 uses Plot_Prologue;
+uses BattleMenu, Items;
 uses _Log, _Settings;
 
 {$REGION интро}
@@ -117,6 +118,8 @@ begin
                 begin
                     _Log.Log('= ОТКАТ');
                     writeln;
+                    WriteEqualsLine;
+                    writeln('Контрольная точка загружена.');
                     WriteEqualsLine;
                     Anim.Next3;
                     Inventory.Load;

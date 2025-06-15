@@ -25,7 +25,7 @@ procedure SilentUse(const it: Item);
 /// использовать предмет, удалить из инвентаря и вывести об этом сообщение
 procedure Use(const it: Item);
 /// последовательной названий предметов в инвентаре
-function GetNames: sequence of string;
+function GetItems: HashSet<Item>;
 /// вывести список предметов в инвентаре
 procedure Output;
 
@@ -36,11 +36,11 @@ uses Procs, Tutorial;
 var
     current, saved: HashSet<Item>;
 
-procedure Save := if (current <> nil) then saved := new HashSet<Item>(current);
+procedure Save := saved := new HashSet<Item>(current);
 
-procedure Load := if (saved <> nil) then current := new HashSet<Item>(saved);
+procedure Load := current := new HashSet<Item>(saved);
 
-procedure Reset := if (current <> nil) then current.Clear;
+procedure Reset := current.Clear;
 
 function ItemCount: integer := current.Count;
 
@@ -77,17 +77,18 @@ begin
     TxtClr(Color.White);
 end;
 
-function GetNames: sequence of String := current.Select(q -> q.name);
+function GetItems: HashSet<Item> := current;
 
 procedure Output;
 begin
     TxtClr(Color.Yellow);
     if IsEmpty then writeln('Предметов нет.')
-    else foreach s: string in GetNames do writeln('=== ' + s);
+    else foreach s: string in current.Select(q -> q.name) do println('===', s);
 end;
 
 initialization
-    current := new HashSet<Item>
+    current := new HashSet<Item>;
+    saved := new HashSet<Item>(0);
 
 finalization
     if (current <> nil) then

@@ -7,6 +7,7 @@
     <Item Type="SourceFile" Name="achs.pas" Path="achs.pas" />
     <Item Type="SourceFile" Name="actors.pas" Path="actors.pas" />
     <Item Type="SourceFile" Name="anim.pas" Path="anim.pas" />
+    <Item Type="SourceFile" Name="battlemenu.pas" Path="battlemenu.pas" />
     <Item Type="SourceFile" Name="buttonmashminigames.pas" Path="buttonmashminigames.pas" />
     <Item Type="SourceFile" Name="chat.pas" Path="chat.pas" />
     <Item Type="SourceFile" Name="cursor.pas" Path="cursor.pas" />
