@@ -5,9 +5,6 @@ interface
 type
     Color = System.ConsoleColor;
     Key = System.ConsoleKey;
-    actor_enum = (anon, Саня, Костыль, Рома, Трип, Рита,
-        {todo добавить actors}
-        Тританити, Мотвеус, Агент_Сергеев, Меромавинген);
 
 const
     TAB = #9;

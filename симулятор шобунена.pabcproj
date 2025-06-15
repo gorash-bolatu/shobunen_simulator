@@ -5,6 +5,7 @@
     <Item Type="SourceFile" Name="_log.pas" Path="_log.pas" />
     <Item Type="SourceFile" Name="achievements.pas" Path="achievements.pas" />
     <Item Type="SourceFile" Name="achs.pas" Path="achs.pas" />
+    <Item Type="SourceFile" Name="actors.pas" Path="actors.pas" />
     <Item Type="SourceFile" Name="anim.pas" Path="anim.pas" />
     <Item Type="SourceFile" Name="buttonmashminigames.pas" Path="buttonmashminigames.pas" />
     <Item Type="SourceFile" Name="chat.pas" Path="chat.pas" />

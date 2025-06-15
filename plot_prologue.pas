@@ -16,7 +16,7 @@ var
 implementation
 
 uses Procs, Chat, Inventory, Items, Menu, Anim, ButtonMashMinigames, Dialogue,
-    Achs, Matrix, Tutorial;
+    Actors, Achs, Matrix, Tutorial;
 
 var
     Route: (SOLO, RITA, TRIP, ROMA);
@@ -656,7 +656,7 @@ begin
                     writeln('Через мгновение руку пронзает боль, и ты осознаёшь, что это была не лучшая идея.');
                     writeln('Тогда ты пытаешься опрокинуть шкаф, но он оказывается слишком тяжёлым.');
                     writeln('В ярости ты начинаешь молотить по шкафу руками со всех сторон!');
-                    Dialogue.Say(Саня, 'ОРАОРАОРАОРАОРАОРАОРАОРАОРАОРАОРА!!!');
+                    Dialogue.Say(Actors.Sanya, 'ОРАОРАОРАОРАОРАОРАОРАОРАОРАОРАОРА!!!');
                     Dialogue.Close;
                     writeln('Шкафу всё равно.');
                     writeln('...Ты решаешь оставить эту затею.');
@@ -936,21 +936,21 @@ begin
     writeln('По пути ты встречаешь каких-то гопников, курящих у трансформаторной будки.');
     if TextedRoma then writeln('Ты не сразу узнаёшь в них друзей Ромы с района.')
     else writeln('Они похожи на парней, с которыми часто тусуется один твой друг, Рома.');
-    Dialogue.Say(anon, 'О, Шобунен, ты, что ли?');
-    Dialogue.Say(Саня, 'Э... Привет, чё как?');
-    Dialogue.Say(anon, 'Норм. Чё, идёшь на парковку?');
+    Dialogue.Say(nil, 'О, Шобунен, ты, что ли?');
+    Dialogue.Say(Actors.Sanya, 'Э... Привет, чё как?');
+    Dialogue.Say(nil, 'Норм. Чё, идёшь на парковку?');
     if TextedRoma then
     begin
-        Dialogue.Say(Саня, 'Ага. Вы тоже туда на тусу?');
-        Dialogue.Say(anon,
+        Dialogue.Say(Actors.Sanya, 'Ага. Вы тоже туда на тусу?');
+        Dialogue.Say(nil,
            'Стоп, реально собрался? А нафиг ты с собакой? Хах...',
            'Лан, пофиг, погнали, пора уже.');
         Dialogue.Close;
         writeln('Парни уходят, и ты неловко увязываешься за ними.');
     end
     else begin
-        Dialogue.Say(Саня, 'Парковку?');
-        Dialogue.Say(anon, 'Понятно...');
+        Dialogue.Say(Actors.Sanya, 'Парковку?');
+        Dialogue.Say(nil, 'Понятно...');
         Dialogue.Close;
         writeln('Парни шустро пожимают тебе руки и продолжают говорить о своём.');
         writeln('Ты пожимаешь плечами и идёшь дальше.');

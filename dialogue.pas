@@ -2,17 +2,17 @@
 
 interface
 
-uses Procs;
+uses Actors;
 
 procedure Close;
-procedure Say(speaker: actor_enum; params phrases: array of string);
-function BulletTime(speaker: actor_enum; params phrases: array of string): string;
+procedure Say(const speaker: Actor?; params phrases: array of string);
+function BulletTime(const speaker: Actor?; params phrases: array of string): string;
 procedure OraMuda;
 procedure Echo;
 
 implementation
 
-uses Anim, Draw, Cursor, _Settings;
+uses Anim, Draw, Cursor, Procs, _Settings;
 
 var
     DialogueOpened: boolean;
@@ -20,7 +20,7 @@ var
     BulletTimeMode: boolean;
     BulletTimeCaught: string := nil;
 
-procedure Open(const speaker: actor_enum);
+procedure Open(const speaker: Actor?);
 begin
     if DialogueOpened then writeln
     else begin
@@ -28,17 +28,12 @@ begin
         DialogueOpened := True;
     end;
     TxtClr(Color.White);
-    if (speaker = anon) then NameWidth := 5
-    else NameWidth := (speaker.ToString.Length + 2);
+    NameWidth := speaker.HasValue ? (speaker.&Value.name.Length + 2) : 5;
     Draw.Box(NameWidth, 1);
     Cursor.GoTop(-2);
     Cursor.SetLeft(2);
-    case speaker of
-        Саня: TxtClr(Color.Magenta);
-        Костыль, Агент_Сергеев: TxtClr(Color.Red);
-    else TxtClr(Color.Green);
-    end; // case end
-    writeln((speaker = anon) ? '???' : speaker.ToString.Replace('_', ' '));
+    TxtClr(speaker.&Value.color);
+    writeln(speaker.HasValue ? speaker.&Value.name : '???');
 end;
 
 procedure Close;
@@ -51,7 +46,7 @@ begin
     ClrKeyBuffer;
 end;
 
-procedure Say(speaker: actor_enum; params phrases: array of string);
+procedure Say(const speaker: Actor?; params phrases: array of string);
 begin
     if (phrases.Length = 0) then phrases := Arr('...');
     Open(speaker);
@@ -129,7 +124,7 @@ begin
     end;
 end;
 
-function BulletTime(speaker: actor_enum; params phrases: array of string): string;
+function BulletTime(const speaker: Actor?; params phrases: array of string): string;
 begin
     BulletTimeCaught := nil;
     BulletTimeMode := True;
@@ -149,9 +144,9 @@ procedure OraMuda;
 begin
     DialogueOpened := True;
     DialogueWidth := 67;
-    for var k: actor_enum := Саня to Костыль do
+    for var k: boolean := False to True do
     begin
-        Open(k);
+        Open(k ? Actors.Sanya : Actors.Kostyl);
         TxtClr(Color.White);
         writeln('├', '─' * NameWidth, '┴', '─' * (DialogueWidth - NameWidth - 1), '┐');
         writeln('│', ' ' * DialogueWidth, '│');
@@ -185,7 +180,7 @@ begin
         DialogueOpened := True;
         var z_arr: array of string;
         z_arr := k ? u_a : u_b;
-        Say((k ? Саня : Костыль), z_arr);
+        Say((k ? Actors.Sanya : Actors.Kostyl), z_arr);
         Close;
         Cursor.GoTop(-6);
         DialogueOpened := True;
