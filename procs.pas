@@ -52,6 +52,8 @@ procedure WriteEqualsLine;
 procedure WritelnX2;
 /// разбиение текста на строки чтобы он вписывался в доступную ширину
 function WordWrap(const str: string; width: integer; separator: string := NewLine): string;
+/// выравнивает строку по центру с заполнением проблеами по длине n
+function PadCenter(self: string; n: integer): string;
 /// случайный 50% шанс на возврат a или b
 function FiftyFifty<T>(a, b: T): T;
 /// сборка мусора вручную
@@ -203,6 +205,13 @@ begin
         lines[i] += line;
     end;
     Result := string.Join(separator, lines);
+end;
+
+function PadCenter(self: string; n: integer): string;
+begin
+    var spaces := n - self.Length;
+    var left_padding := (spaces div 2) + self.Length;
+    Result := self.PadLeft(left_padding).PadRight(n);
 end;
 
 function FiftyFifty<T>(a, b: T): T := (Random(2) = 0) ? a : b;
@@ -394,6 +403,8 @@ function SetSuspendState(hiberate, forceCritical, disableWakeEvent: boolean): bo
     external 'Powrprof.dll' name 'SetSuspendState';
 
 procedure SleepMode := SetSuspendState(false, true, true);
+
+
 
 initialization
     if not STARTUP then Halt(0);

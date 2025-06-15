@@ -16,30 +16,34 @@ uses _Log, _Settings;
 {$REGION интро}
 
 procedure TITLESCREEN;
+const
+    TITLE_TOP: array of string = (
+        '   _                     __    __   ____   ___   ___ ',
+        '  /   |   /  \  /  \  / |  |  |  | |____| |   | |   |',
+        ' /    |  /|  |\/|   \/  |  |  |__|   ||   |   | |___|',
+        '|     | / |  |  |   /   |  |    /|   ||   |   | |    ',
+        ' \    |/  |  |  |  /    /  |   / |   ||   |   | |    ',
+        '  \_  /   |  |  | /    /   |  /  |   ||   |___| |    ');
+    TITLE_BOTTOM: array of string = (
+        '       __   ___              ___                ',
+        '| | | |  | |      \  / |  | |    |  |     /\    ',
+        '| | | |  | |       \/  |  | |___ |  |    /  \   ',
+        '| | | |  | |___    /   |==| |    |==|   /====\  ',
+        '| | | |  | |   |  /    |  | |    |  |  /      \ ',
+        '|_|_| |__| |___| /     |  | |___ |  | /        \');
 begin
     ClrScr;
     TxtClr(Color.Green);
-    writeln('                           _                     __    __   ____   ___   ___ ');
-    writeln('                          /   |   /  \  /  \  / |  |  |  | |____| |   | |   |');
-    writeln('                         /    |  /|  |\/|   \/  |  |  |__|   ||   |   | |___|');
-    writeln('                        |     | / |  |  |   /   |  |    /|   ||   |   | |    ');
-    writeln('                         \    |/  |  |  |  /    /  |   / |   ||   |   | |    ');
-    writeln('                          \_  /   |  |  | /    /   |  /  |   ||   |___| |    ');
+    foreach x: string in TITLE_TOP do writeln(PadCenter(x, BufWidth - 1));
     BeepWait(500, 450);
-    writeln('                                  __   ___              ___                ');
-    writeln('                           | | | |  | |      \  / |  | |    |  |     /\    ');
-    writeln('                           | | | |  | |       \/  |  | |___ |  |    /  \   ');
-    writeln('                           | | | |  | |___    /   |==| |    |==|   /====\  ');
-    writeln('                           | | | |  | |   |  /    |  | |    |  |  /      \ ');
-    writeln('                           |_|_| |__| |___| /     |  | |___ |  | /        \');
+    foreach y: string in TITLE_BOTTOM do writeln(PadCenter(y, BufWidth - 1));
     BeepWait(500, 450);
     writeln;
     TxtClr(Color.Cyan);
-    writeln('                                           ВЕРСИЯ ', VERSION.ToUpper);
-    writeln;
+    writeln(PadCenter(('ВЕРСИЯ ' + VERSION.ToUpper), BufWidth - 1), NewLine);
     TxtClr(Color.DarkGreen);
     BeepWait(500, 450);
-    writeln('                                 НАЖМИТЕ ЛЮБУЮ КЛАВИШУ, ЧТОБЫ НАЧАТЬ');
+    writeln(PadCenter('НАЖМИТЕ ЛЮБУЮ КЛАВИШУ, ЧТОБЫ НАЧАТЬ', BufWidth - 1));
     BeepWait(700, 450);
     ClrKeyBuffer;
     ReadKey;
@@ -48,7 +52,7 @@ end;
 
 procedure WHATSNEW;// todo
 begin
-    TxtClr(Color.DarkGreen);
+    TxtClr(Color.Cyan);
     WriteEqualsLine;
     writeln('// Список изменений:');
     writeln('//    - очень крупные правки текста, дизайна и кода');
@@ -85,7 +89,7 @@ begin
     Inventory.Reset;
     foreach current_scene: Scene in START_SCENE.Chain do
         // части просто проходимые без геймоверов:
-        if (current_scene is Cutscene) then (current_scene as Cutscene).Run
+        if (current_scene is Cutscene) then Cutscene(current_scene).Run
         // части с возможностью геймовера:
         else begin
             if (current_scene <> START_SCENE) then
@@ -99,7 +103,7 @@ begin
                 Console.Beep;  
             end;
             Inventory.Save;
-            while not (current_scene as PlayableScene).Passed() do
+            while not PlayableScene(current_scene).Passed() do
             begin
                 Achs.GameOver.Achieve;
                 _Log.Log('=== геймовер');
@@ -113,11 +117,9 @@ begin
                 TxtClr(Color.Green);
                 writeln('Вернуться на последнюю контрольную точку? (Y/N)');
                 writeln;
-                Cursor.GoTop(-1);
                 if YN then
                 begin
                     _Log.Log('= ОТКАТ');
-                    writeln;
                     WriteEqualsLine;
                     writeln('Контрольная точка загружена.');
                     WriteEqualsLine;
@@ -125,7 +127,7 @@ begin
                     Inventory.Load;
                 end
                 else begin
-                    write('Начать заново? (Y/N)');
+                    writeln('Начать заново? (Y/N)');
                     if YN then
                     begin
                         _Log.Log('=== РЕСТАРТ');
@@ -179,8 +181,10 @@ begin
         
         if not DEBUGMODE then WHATSNEW;
         
-        while GAMELOOP() do;
+        while GAMELOOP() do{};
+        
         writeln;
+    
         // TODO проверить чтобы БЫЛА пауза перед выходом
     except
         on _ex_: Exception do Catch(_ex_);
