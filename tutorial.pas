@@ -1,6 +1,6 @@
 ﻿unit Tutorial;
 
-interface
+uses Procs;
 
 type
     Hint = record
@@ -15,17 +15,10 @@ var
     CommandH, InventoryH, MenuH, ElevatorH, LookAroundH, AnimNextH, DialogueH, ChatH: Hint;
 
 procedure Comment(params lines: array of string);
-procedure ShowCheckHint;
-
-implementation
-
-uses Procs;
-
-procedure Comment(params lines: array of string);
 begin
     foreach l: string in lines do
     begin
-        var temp: Procs.Color := CurClr;
+        var temp: Color := CurClr;
         TxtClr(Color.DarkGreen);
         writeln('// ' + l);
         TxtClr(temp);

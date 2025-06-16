@@ -26,16 +26,16 @@ var
 
 function Select(const options: LinkedList<string>; submenu: boolean): string;
 var
+    original_cur_top := Cursor.Top;
     prompt: string := submenu ? '> ' : '>>> ';
     k: Key;
-    o_c: integer := options.Count;
     current: LinkedListNode<string> := options.First;
 begin
     repeat
         if DEBUGMODE then
-            if o_c > 32 then
+            if options.Count > 32 then
                 raise new Exception('СЛИШКОМ МНОГО ОПЦИЙ ВЫБОРА')
-            else if o_c = 0 then
+            else if options.Count = 0 then
                 raise new Exception('НЕТ ПУНКТОВ ВЫБОРА ДЛЯ МЕНЮ');
         TxtClr(Color.Gray);
         foreach st: string in options do writeln(PROMPT + st);
@@ -47,8 +47,9 @@ begin
             ClearLine(True);
             Tutorial.MenuH.Show;
         end;
-        Cursor.GoTop(-o_c);
+        Cursor.GoTop(-options.Count);
         repeat
+            UpdScr;
             var curstr := PROMPT + current.&Value;
             TxtClr(Color.Yellow);
             Draw.Text(curstr);
@@ -63,7 +64,7 @@ begin
                         if (current = options.First) // catch underflow
                         then begin
                             current := options.Last;
-                            Cursor.GoTop(+o_c - 1);
+                            Cursor.GoTop(+options.Count - 1);
                         end
                         else begin
                             current := current.Previous;
@@ -75,7 +76,7 @@ begin
                         if (current = options.Last) // catch overflow
                         then begin
                             current := options.First;
-                            Cursor.GoTop(-o_c + 1);
+                            Cursor.GoTop(-options.Count + 1);
                         end
                         else begin
                             current := current.Next;
@@ -84,7 +85,8 @@ begin
                     end;
             end; // case end
         until False;
-        ClearLines((o_c + 1), True);
+        Cursor.SetTop(original_cur_top);
+        ClearLines((options.Count + 1), True);
         TxtClr(Color.Gray);
         writeln(PROMPT, current.&Value, NewLine);
         Result := current.&Value.ToLower;

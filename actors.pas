@@ -10,6 +10,7 @@ type
     end;
 
 const
+    Anon: Actor = (name: '???'; color: ActorColor.Green);
     Sanya: Actor = (name: 'Саня'; color: ActorColor.Magenta);
     Kostyl: Actor = (name: 'Костыль'; color: ActorColor.Red);
     Roma: Actor = (name: 'Рома'; color: ActorColor.Green);

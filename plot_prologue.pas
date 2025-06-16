@@ -936,13 +936,13 @@ begin
     writeln('По пути ты встречаешь каких-то гопников, курящих у трансформаторной будки.');
     if TextedRoma then writeln('Ты не сразу узнаёшь в них друзей Ромы с района.')
     else writeln('Они похожи на парней, с которыми часто тусуется один твой друг, Рома.');
-    Dialogue.Say(nil, 'О, Шобунен, ты, что ли?');
+    Dialogue.Say(Actors.Anon, 'О, Шобунен, ты, что ли?');
     Dialogue.Say(Actors.Sanya, 'Э... Привет, чё как?');
-    Dialogue.Say(nil, 'Норм. Чё, идёшь на парковку?');
+    Dialogue.Say(Actors.Anon, 'Норм. Чё, идёшь на парковку?');
     if TextedRoma then
     begin
         Dialogue.Say(Actors.Sanya, 'Ага. Вы тоже туда на тусу?');
-        Dialogue.Say(nil,
+        Dialogue.Say(Actors.Anon,
            'Стоп, реально собрался? А нафиг ты с собакой? Хах...',
            'Лан, пофиг, погнали, пора уже.');
         Dialogue.Close;
@@ -950,7 +950,7 @@ begin
     end
     else begin
         Dialogue.Say(Actors.Sanya, 'Парковку?');
-        Dialogue.Say(nil, 'Понятно...');
+        Dialogue.Say(Actors.Anon, 'Понятно...');
         Dialogue.Close;
         writeln('Парни шустро пожимают тебе руки и продолжают говорить о своём.');
         writeln('Ты пожимаешь плечами и идёшь дальше.');

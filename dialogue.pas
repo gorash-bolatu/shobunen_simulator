@@ -5,8 +5,8 @@ interface
 uses Actors;
 
 procedure Close;
-procedure Say(const speaker: Actor?; params phrases: array of string);
-function BulletTime(const speaker: Actor?; params phrases: array of string): string;
+procedure Say(const speaker: Actor; params phrases: array of string);
+function BulletTime(const speaker: Actor; params phrases: array of string): string;
 procedure OraMuda;
 procedure Echo;
 
@@ -20,33 +20,33 @@ var
     BulletTimeMode: boolean;
     BulletTimeCaught: string := nil;
 
-procedure Open(const speaker: Actor?);
+procedure Open(const speaker: Actor);
 begin
     if DialogueOpened then writeln
     else begin
         Anim.Next3;
         DialogueOpened := True;
     end;
+    NameWidth := speaker.name.Length + 2;
     TxtClr(Color.White);
-    NameWidth := speaker.HasValue ? (speaker.&Value.name.Length + 2) : 5;
     Draw.Box(NameWidth, 1);
     Cursor.GoTop(-2);
     Cursor.SetLeft(2);
-    TxtClr(speaker.&Value.color);
-    writeln(speaker.HasValue ? speaker.&Value.name : '???');
+    TxtClr(speaker.color);
+    writeln(speaker.name);
 end;
 
 procedure Close;
 begin
     if DEBUGMODE then
-    if not DialogueOpened then raise new Exception('ПОВТОРНЫЙ DIALOGUE.CLOSE()');
+        if not DialogueOpened then raise new Exception('ПОВТОРНЫЙ DIALOGUE.CLOSE()');
     DialogueOpened := False;
     writelnx2;
     TxtClr(Color.White);
     ClrKeyBuffer;
 end;
 
-procedure Say(const speaker: Actor?; params phrases: array of string);
+procedure Say(const speaker: Actor; params phrases: array of string);
 begin
     if (phrases.Length = 0) then phrases := Arr('...');
     Open(speaker);
@@ -73,12 +73,11 @@ begin
         ClrKeyBuffer;
         if BulletTimeMode then
         begin
-                    {$IFDEF DOOBUG}
-            if (n.Count(q -> q = '{') > 2) or (n.Count(q -> q = '}') > 2) then
-                raise new Exception('СЛИШКОМ МНОГО ФИГУРНЫХ СКОБОК {}: "' + n + '"')
-            else if (n.Count(q -> q = '{') <> n.Count(q -> q = '}')) then
-                raise new Exception('НЕЗАКРЫТЫЕ ФИГУРНЫЕ СКОБКИ {}: "' + n + '"');
-                    {$ENDIF}
+            if DEBUGMODE then
+                if (n.Count(q -> q = '{') > 2) or (n.Count(q -> q = '}') > 2) then
+                    raise new Exception('СЛИШКОМ МНОГО ФИГУРНЫХ СКОБОК {}: "' + n + '"')
+                else if (n.Count(q -> q = '{') <> n.Count(q -> q = '}')) then
+                    raise new Exception('НЕЗАКРЫТЫЕ ФИГУРНЫЕ СКОБКИ {}: "' + n + '"');
             for var c: integer := 1 to n.Length do
             begin
                 if (c = n.IndexOf('{') + 1) then TxtClr(Color.Cyan)
@@ -109,12 +108,12 @@ begin
             if (BulletTimeCaught <> nil) then break;
         end
         else begin
-                    {$IFDEF DOOBUG}
-            write(n);
-                    {$ELSE}
-            Anim.Text(n, 30);
-            sleep(400);
-                    {$ENDIF}
+            if DEBUGMODE then
+                write(n)
+            else begin
+                Anim.Text(n, 30);
+                sleep(400);
+            end;
             TxtClr(Color.Cyan);
             write(' ');
             Anim.Next1;
@@ -124,7 +123,7 @@ begin
     end;
 end;
 
-function BulletTime(const speaker: Actor?; params phrases: array of string): string;
+function BulletTime(const speaker: Actor; params phrases: array of string): string;
 begin
     BulletTimeCaught := nil;
     BulletTimeMode := True;
