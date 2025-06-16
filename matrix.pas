@@ -6,52 +6,85 @@ procedure Mtrx;
 
 implementation
 
-uses Procs, Cursor, Draw, Anim, Dialogue, TextToSpeech, Menu, Actors, _Settings;
-uses _Log;
+uses Procs, Cursor, Draw, Anim, Dialogue, TextToSpeech, Menu, Actors;
+uses _Log, _Settings;
+
+function RandChar: char;
+begin
+    case Random(4) of
+        0: Result := chrunicode(Random(33, 126));
+        1: Result := chrunicode(Random(454, 788));
+        2: Result := chrunicode(Random(9478, 9580));
+        3: Result := chrunicode(Random(48, 57))
+    end; // case end
+end;
+
+type
+    Column = sealed class
+        Position, Height: longword;
+        constructor Create(p, h: longword);
+        begin
+            self.Position := p;
+            self.Height := h;
+        end;
+    end;
 
 procedure Transition;
+var
+    width: integer := BufWidth;
+    columns := new HashSet<Column>(width);
 begin
-    TxtClr(Color.Green);
-    Cursor.SetLeft(0);
-    if (Cursor.Top > Console.WindowHeight) then Cursor.SetTop(Cursor.Top - Console.WindowHeight + 1)
-    else Cursor.SetTop(0);
-    var starttime_m: integer := ElapsedMS;
-    var threshold: longword;
-    var cycle: byte := 0;
-    while (Cursor.Top < Console.WindowHeight) do
+    UpdScr;
+    {$omp parallel sections}
     begin
-        try
-            write(Random(10));
-        except
-            break;
+        // поток 1
+        for var i: byte := 0 to (width - 2) do
+            columns.Add(new Column(i, 0));
+        // поток 2
+        begin
+            TxtClr(Color.Green);
+            Cursor.SetLeft(0);
+            if (Cursor.Top > Console.WindowHeight) then
+                Cursor.SetTop(Cursor.Top - Console.WindowHeight + 1)
+            else
+                Cursor.SetTop(0);
         end;
-        threshold := 15 + ((ElapsedMS - starttime_m) div 180);
-        if (cycle mod threshold = 0) then sleep(1);
-        cycle += 1; // overflow is ok
     end;
+    var starttime: longword := ElapsedMS;
+    var current: Column;
+    var height_cap: integer := Cursor.Top + Console.WindowHeight - 3;
+    repeat
+        if (BufWidth < width) then
+        begin
+            Console.BufferWidth := width;
+            Console.WindowWidth := BufWidth;
+        end;
+        current := columns.ElementAt(Random(columns.Count));
+        Cursor.SetLeft(current.Position);
+        Cursor.GoTop(+current.Height);
+        Draw.TextVert(RandChar());
+        if (Cursor.Top > height_cap) then columns.Remove(current);
+        Cursor.GoTop(-current.Height);
+        current.Height += 1;
+    until (columns.Count < ((ElapsedMS - starttime) shr 6));
     ClrScr;
-    _Log.Log($'=== mtrx_transition: delay: 15+{threshold - 15}; window: {Console.WindowWidth}x{Console.WindowHeight}; buffer: {BufWidth}x{Console.BufferHeight}');
     sleep(400);
+    columns.Clear;
+    columns := nil;
+    current := nil;
 end;
 
 procedure NextSlide := DoWithoutUpdScr(Transition);
 
 procedure PrintNumbers;
 begin
-    var mz: char;
     loop 5 do
     begin
         var starttime := ElapsedMS;
         var cycle: boolean := False;
         while (ElapsedMS - starttime < 800) do
         begin
-            case Random(5) of
-                0: mz := chrunicode(Random(33, 126));
-                1: mz := chrunicode(Random(454, 788));
-                2: mz := chrunicode(Random(9478, 9580))
-            else mz := chrunicode(Random(48, 57))
-            end; // case end
-            write(mz * BufWidth);
+            write(RandChar() * BufWidth);
             if cycle then sleep(1);
             cycle := not cycle;
         end;
@@ -170,7 +203,7 @@ begin
     TextToSpeech.Architect(
        'Симулятор намного старше, чем ты думаешь',
        'Я предпочитаю лимитировать эпоху Симулятора очередным билдом',
-      $'И в таком случае, это уже {VERSION_nth} версия, "{VERSION}".',
+      $'И в таком случае, это уже {VERSION_nth} версия, "{VERSION}"',
        'Первый Симулятор, который я создал, был произведением искусства. Совершенством',
        'Его триумф сравним лишь с его монументальным крахом',
        'Неизбежность этого краха является следствием убогости языка PascalABC.NET');
