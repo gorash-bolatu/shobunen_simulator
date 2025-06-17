@@ -42,12 +42,15 @@ procedure GoXY(x, y: integer) := Console.SetCursorPosition(Left + x, Top + y);
 
 /// передвинуть "окно" консоли чтобы было видно где курсор
 procedure Find;
-const MARGIN = 2;
+const
+    MARGIN = 2;
 begin
-  if (Cursor.Top > Console.WindowTop + MARGIN)
-      xor (Cursor.Top <= Console.WindowTop + Console.WindowHeight - MARGIN) then
-        if (Cursor.Top < Console.WindowHeight) then Console.WindowTop := 0
-        else Console.WindowTop := Cursor.Top - Console.WindowHeight + MARGIN - 1;
+    if (Cursor.Top > Console.WindowTop + MARGIN)
+        xor (Cursor.Top <= Console.WindowTop + Console.WindowHeight - MARGIN) then
+        if (Cursor.Top < Console.WindowHeight) then
+            Console.WindowTop := 0
+        else
+            Console.WindowTop := Cursor.Top - Console.WindowHeight + MARGIN - 1;
     if (Cursor.Top + MARGIN >= Console.WindowTop + Console.WindowHeight) then Console.WindowTop += 1;
 end;
 

@@ -5,14 +5,11 @@ interface
 /// загрузить элемент в будущее меню выбора
 procedure Load(element: string);
 /// выгрузить элементы и выбрать строку из меню
-procedure UnloadSelect(no_anim: boolean := False);
+procedure UnloadSelect;
 /// выбрать строку из меню выбора из вариантов options
 procedure FastSelect(params options: array of string);
-/// выбрать строку из меню выбора (в виде под-меню) из вариантов options
-procedure FastSelectSubmenu(params options: array of string);
 /// последний сохранённый результат успешного выбора в меню
 function LastResult: string;
-
 
 
 implementation
@@ -22,23 +19,28 @@ uses _Log;
 
 var
     menures: string;
-    opts: List<string>;
+    opt: List<string>;
 
-function Select(const options: LinkedList<string>; submenu: boolean): string;
+function Select(const options: array of string): string;
+const
+    PROMPT: string = '>>> ';
 var
-    original_cur_top := Cursor.Top;
-    prompt: string := submenu ? '> ' : '>>> ';
+    point: shortint;
     k: Key;
-    current: LinkedListNode<string> := options.First;
+    o_c: byte;
+    o_p: string;
 begin
+    o_c := options.Count;
+    if DEBUGMODE then
+        if o_c > 32 then
+            raise new Exception('СЛИШКОМ МНОГО ОПЦИЙ ВЫБОРА')
+        else if o_c = 0 then
+            raise new Exception('НЕТ ПУНКТОВ ВЫБОРА ДЛЯ МЕНЮ');
     repeat
-        if DEBUGMODE then
-            if options.Count > 32 then
-                raise new Exception('СЛИШКОМ МНОГО ОПЦИЙ ВЫБОРА')
-            else if options.Count = 0 then
-                raise new Exception('НЕТ ПУНКТОВ ВЫБОРА ДЛЯ МЕНЮ');
+        point := 0;
         TxtClr(Color.Gray);
-        foreach st: string in options do writeln(PROMPT + st);
+        UpdScr;
+        foreach st: string in options do writeln(PROMPT, st);
         if not Tutorial.MenuH.Shown then
         begin
             Tutorial.Comment('перемещение стрелками или W/S, выбор на Enter или пробел');
@@ -47,50 +49,31 @@ begin
             ClearLine(True);
             Tutorial.MenuH.Show;
         end;
-        Cursor.GoTop(-options.Count);
+        Cursor.GoTop(-o_c);
         repeat
-            UpdScr;
-            var curstr := PROMPT + current.&Value;
+            o_p := PROMPT + options[point];
+            Cursor.GoTop(+point);
             TxtClr(Color.Yellow);
-            Draw.Text(curstr);
+            Draw.Text(o_p);
             ClrKeyBuffer;
             k := ReadKey;
+            UpdScr;
             TxtClr(Color.Gray);
-            Draw.Text(curstr);
+            Draw.Text(o_p);
+            Cursor.GoTop(-point);
             case k of
-                {-} Key.Enter, Key.Tab, Key.Select, Key.Spacebar, Key.NumPad5: break;
-                {-} Key.UpArrow, Key.NumPad8, Key.W, Key.LeftArrow, Key.NumPad4, Key.A, Key.OemMinus:
-                    begin
-                        if (current = options.First) // catch underflow
-                        then begin
-                            current := options.Last;
-                            Cursor.GoTop(+options.Count - 1);
-                        end
-                        else begin
-                            current := current.Previous;
-                            Cursor.GoTop(-1);
-                        end;
-                    end;
-                {-} Key.DownArrow, Key.NumPad2, Key.S, Key.RightArrow, Key.NumPad6, Key.D, Key.OemPlus:
-                    begin
-                        if (current = options.Last) // catch overflow
-                        then begin
-                            current := options.First;
-                            Cursor.GoTop(-options.Count + 1);
-                        end
-                        else begin
-                            current := current.Next;
-                            Cursor.GoTop(+1);
-                        end;
-                    end;
+                Key.Enter, Key.Tab, Key.Select, Key.Spacebar, Key.NumPad5: break;
+                Key.UpArrow, Key.NumPad8, Key.W, Key.LeftArrow, Key.NumPad4, Key.A, Key.OemMinus: point -= 1;
+                Key.DownArrow, Key.NumPad2, Key.S, Key.RightArrow, Key.NumPad6, Key.D, Key.OemPlus: point += 1;
             end; // case end
+            if (point < 0) then point := (o_c - 1) // underflow
+            else if (point + 1 > o_c) then point := 0; // overflow
         until False;
-        Cursor.SetTop(original_cur_top);
-        ClearLines((options.Count + 1), True);
+        ClearLines((o_c + 1), True);
         TxtClr(Color.Gray);
-        writeln(PROMPT, current.&Value, NewLine);
-        Result := current.&Value.ToLower;
-        _Log.Log($'= меню: [{options.ToArray.IndexOf(Result)}] {Result}');
+        writeln(o_p, NewLine);
+        Result := options[point].ToLower;
+        _Log.Log($'= меню: [{point}] {Result}');
         if Result.Equals('проверить инвентарь') then
         begin
             Inventory.Output;
@@ -100,39 +83,31 @@ begin
         end;
     until True;
     TxtClr(Color.White);
-    current := nil;
 end;
 
-procedure Load(element: string) := opts.Add(element);
+procedure Load(element: string) := opt.Add(element);
 
-procedure UnloadSelect(no_anim: boolean);
+procedure UnloadSelect;
 begin
-    if not no_anim then Anim.Next3;
-    menures := ComputeWithoutUpdScr(() -> Select(opts.ToLinkedList, False));
-    for var i: integer := 0 to (opts.Count - 1) do opts[i] := nil;
-    opts.Clear;
+    Anim.Next3;
+    menures := ComputeWithoutUpdScr(() -> Select(opt.ToArray));
+    for var i: integer := 0 to (opt.Count - 1) do opt[i] := nil;
+    opt.Clear;
 end;
 
 procedure FastSelect(params options: array of string);
 begin
     Anim.Next3;
-    menures := ComputeWithoutUpdScr(() -> Select(options.ToLinkedList, False));
-end;
-
-procedure FastSelectSubmenu(params options: array of string);
-begin
-    menures := ComputeWithoutUpdScr(() -> Select(options.ToLinkedList, True));
+    menures := ComputeWithoutUpdScr(() -> Select(options));
 end;
 
 function LastResult: string := menures;
 
-
-
 initialization
-    opts := new List<string>;
+    opt := new List<string>;
 
 finalization
-    opts.Clear;
-    opts := nil;
+    opt.Clear;
+    opt := nil;
 
 end.

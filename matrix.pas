@@ -30,16 +30,14 @@ type
     end;
 
 procedure Transition;
-var
-    width: integer := BufWidth;
-    columns := new HashSet<Column>(width);
 begin
     UpdScr;
+    var width: integer := BufWidth;
+    var columns: HashSet<Column> := new HashSet<Column>(width);
     {$omp parallel sections}
     begin
         // поток 1
-        for var i: byte := 0 to (width - 2) do
-            columns.Add(new Column(i, 0));
+        for var i: byte := 0 to (width - 2) do columns.Add(new Column(i, 0));
         // поток 2
         begin
             TxtClr(Color.Green);
@@ -53,6 +51,7 @@ begin
     var starttime: longword := ElapsedMS;
     var current: Column;
     var height_cap: integer := Cursor.Top + Console.WindowHeight - 3;
+    var original_cur_top: integer := Cursor.Top;
     repeat
         if (BufWidth < width) then
         begin
@@ -61,11 +60,10 @@ begin
         end;
         current := columns.ElementAt(Random(columns.Count));
         Cursor.SetLeft(current.Position);
-        Cursor.GoTop(+current.Height);
+        Cursor.SetTop(original_cur_top + current.Height);
         Draw.TextVert(RandChar());
-        if (Cursor.Top > height_cap) then columns.Remove(current);
-        Cursor.GoTop(-current.Height);
         current.Height += 1;
+        if (current.Height > height_cap) then columns.Remove(current);
     until (columns.Count < ((ElapsedMS - starttime) shr 6));
     ClrScr;
     sleep(400);
