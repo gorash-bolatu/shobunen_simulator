@@ -68,6 +68,7 @@ begin
     end;
 end;
 
+// todo убрать в релизе
 function IsValidEntry(const entry: LightJson.JsonValue): boolean;
 begin
     Result := False;

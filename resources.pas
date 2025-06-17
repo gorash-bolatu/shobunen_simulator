@@ -55,6 +55,7 @@ end;
 
 function HasDuplicates<T>(s: sequence of T): boolean := s.GroupBy(q -> q).Any(q -> q.Skip(1).Any);
 
+// todo убрать в релизе
 procedure ValidateResource(const r: string);
 var
     resource_stream: System.IO.Stream;

@@ -10,7 +10,6 @@ program shobu_sim;
 
 uses Procs, Scenes, Inventory, Anim, Cursor, Achievements, Chat, Achs;
 uses Plot_Prologue;
-uses BattleMenu, Items;
 uses _Log, _Settings;
 
 {$REGION интро}
@@ -165,29 +164,28 @@ end;
 
 {$REGION main}
 begin
-    try
-        Console.Title := 'СИМУЛЯТОР ШОБУНЕНА ' + VERSION.ToLower; 
-        
-        if DEBUGMODE then
-        begin
-            writeln('DEBUG MODE');
-            Console.Title += ' [DEBUG MODE]';
-            WriteEqualsLine;
-            Chat.Skip := True;
-        end
-        else TITLESCREEN;
-        
-        _Log.Init;
-        
-        if not DEBUGMODE then WHATSNEW;
-        
-        while GAMELOOP() do{};
-        
-        writeln;
+    Console.Title := 'СИМУЛЯТОР ШОБУНЕНА ' + VERSION.ToLower; 
     
-        // TODO проверить чтобы БЫЛА пауза перед выходом
+    if DEBUGMODE then
+    begin
+        writeln('DEBUG MODE');
+        Console.Title += ' [DEBUG MODE]';
+        WriteEqualsLine;
+        Chat.Skip := True;
+    end
+    else TITLESCREEN;
+    
+    _Log.Init;
+    
+    if not DEBUGMODE then WHATSNEW;
+    
+    try
+        while GAMELOOP() do{};
     except
         on _ex_: Exception do Catch(_ex_);
     end;
+    
+    writeln;
+    // TODO проверить чтобы БЫЛА пауза перед выходом
 end.
 {$ENDREGION}

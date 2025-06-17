@@ -6,8 +6,6 @@ interface
 procedure Text(const strg: string);
 /// вывести вертикальную строку и вернуть курсор назад
 procedure TextVert(const strg: string);
-/// вывести горизонтальную строку и вернуть курсор назад
-procedure Ascii(const strg: string);
 /// вывести спрайт из массива строк и вернуть курсор назад
 procedure Ascii(params arstrg: array of string);
 /// вывести строку пробелов и вернуть курсор назад
@@ -39,8 +37,6 @@ begin
     end;
     Cursor.GoTop(-strg.Length);
 end;
-
-procedure Ascii(const strg: string) := Text(strg);
 
 procedure Ascii(params arstrg: array of string);
 begin

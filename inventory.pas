@@ -25,7 +25,7 @@ procedure SilentUse(const it: Item);
 /// использовать предмет, удалить из инвентаря и вывести об этом сообщение
 procedure Use(const it: Item);
 /// последовательной названий предметов в инвентаре
-function GetItems: HashSet<Item>;
+function GetItems: sequence of Item;
 /// вывести список предметов в инвентаре
 procedure Output;
 
@@ -77,7 +77,7 @@ begin
     TxtClr(Color.White);
 end;
 
-function GetItems: HashSet<Item> := current;
+function GetItems: sequence of Item := current.AsEnumerable;
 
 procedure Output;
 begin

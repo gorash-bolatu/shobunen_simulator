@@ -35,7 +35,7 @@ function IsRus(Self: InstalledVoice): boolean; extensionmethod :=
 Self.VoiceInfo.Culture.TwoLetterISOLanguageName.Equals('ru');
 
 function IsMale(Self: InstalledVoice): boolean; extensionmethod :=
-Self.VoiceInfo.Gender = System.Speech.Synthesis.VoiceGender.Male;
+(Self.VoiceInfo.Gender = System.Speech.Synthesis.VoiceGender.Male);
 
 procedure Fail(const ard: string; const brd: string; setup: boolean);
 // todo когда не будет логов, можно убрать и везде заменить на Dispose;
@@ -87,19 +87,27 @@ begin
                 System.Threading.SpinWait.SpinUntil(() -> synth.IsSpeaking, 800);
                 // если говорилка за это время не подгрузилась:
                 if not synth.IsSpeaking then
-                    raise new System.TimeoutException('ГОЛОСОВОЙ ДВИЖОК НЕ ПОДГРУЗИЛСЯ');// будет обработано xrd
+                    raise new System.TimeoutException('ГОЛОСОВОЙ ДВИЖОК НЕ ПОДГРУЗИЛСЯ');// будет обработано в Except
             except
                 on xrd: Exception do Fail(xrd.GetType.ToString, xrd.Message, False);
                 // Dispose;
-            end;//try except end
-        foreach st: string in ph.Split('.') do
+            end;
+        var delay: word;
+        for var i: integer := 1 to ph.Length do
         begin
-            Anim.Text((st + '.'), (38 + synth.Rate));
-            sleep(300);
+            write(ph[i]);
+            delay := 38;
+            if (i = ph.Length) then
+            begin
+                writeln('.');
+                delay += 400;
+            end
+            else if ((ph[i] in ['!', '?', ',', ':', ';', '.']) and (ph[i] <> ph[i + 1])) then
+                delay += 400;
+            sleep(delay + synth.Rate);
         end;
         ClrKeyBuffer;
         ReadKey;
-        writeln;
         writeln(TAB);
         Cursor.GoTop(-1);
         if DO_TTS then

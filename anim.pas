@@ -3,14 +3,14 @@
 interface
 
 type
-    direction = (up, right, down, left);
+    Direction = (UP, RIGHT, DOWN, LEFT);
 
 procedure Text(const s: string; delay: word);
 procedure Next1;
 procedure Next3;
 procedure Objection;
 procedure TakeThat;
-procedure Slash(left, top: integer; dir: direction);
+procedure Slash(left, top: integer; dir: Direction);
 
 implementation
 
@@ -105,7 +105,7 @@ procedure Objection := ObjectionSplash(False);
 
 procedure TakeThat := ObjectionSplash(True);
 
-procedure Slash(left, top: integer; dir: direction);
+procedure Slash(left, top: integer; dir: Direction);
 const
     delay: byte = 35;
 begin
@@ -117,8 +117,8 @@ begin
         1: chr_a := '\';
         2:
             case dir of
-                direction.left, direction.right: chr_a := '-';
-                direction.down, direction.up: chr_a := '|';
+                Direction.LEFT, Direction.RIGHT: chr_a := '-';
+                Direction.DOWN, Direction.UP: chr_a := '|';
             end;
     end;
     var orig_cur_left: integer := Cursor.Left;
@@ -131,7 +131,7 @@ begin
         case chr_a of
             '/':
                 case dir of
-                    direction.up, direction.right:
+                    Direction.UP, Direction.RIGHT:
                         begin
                             Cursor.GoXY(-2, +2);
                             loop 4 do
@@ -141,7 +141,7 @@ begin
                             end;
                             Anim.Text(chr_b, delay);
                         end;
-                    direction.down, direction.left:
+                    Direction.DOWN, Direction.LEFT:
                         begin
                             Cursor.GoXY(+2, -2);
                             loop 4 do
@@ -154,7 +154,7 @@ begin
                 end;
             '\':
                 case dir of
-                    direction.up, direction.left:
+                    Direction.UP, Direction.LEFT:
                         begin
                             Cursor.GoXY(+2, +2);
                             loop 4 do
@@ -164,7 +164,7 @@ begin
                             end;
                             Anim.Text(chr_b, delay);
                         end;
-                    direction.down, direction.right:
+                    Direction.DOWN, Direction.RIGHT:
                         begin
                             Cursor.GoXY(-2, -2);
                             loop 4 do
@@ -176,7 +176,7 @@ begin
                         end;
                 end;
             '-':
-                if (dir = direction.right) then
+                if (dir = Direction.RIGHT) then
                 begin
                     Cursor.GoLeft(-3);
                     Anim.Text(chr_b * 7, delay);
@@ -191,7 +191,7 @@ begin
                     Anim.Text(chr_b, delay);
                 end;
             '|':
-                if (dir = direction.down) then
+                if (dir = Direction.DOWN) then
                 begin
                     Cursor.GoTop(-2);
                     loop 4 do
