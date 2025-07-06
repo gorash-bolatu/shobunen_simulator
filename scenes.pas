@@ -86,12 +86,9 @@ type
 
 function Link(params scenearr: array of Scene): Scene;
 begin
-    if (scenearr.Length = 0) then Result := nil
-    else begin
-        for var i: integer := 0 to (scenearr.Length - 2) do
-            scenearr[i].SetNext(scenearr[i + 1]);
-        Result := scenearr[0];
-    end;
+    for var i: integer := 0 to (scenearr.Length - 2) do
+        scenearr[i].SetNext(scenearr[i + 1]);
+    Result := scenearr[0];
 end;
 
 function Chain(self: Scene): sequence of Scene; extensionmethod;

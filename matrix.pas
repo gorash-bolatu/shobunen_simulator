@@ -31,7 +31,6 @@ type
 
 procedure Transition;
 begin
-    UpdScr;
     var width: integer := BufWidth;
     var columns: HashSet<Column> := new HashSet<Column>(width);
     {$omp parallel sections}
@@ -40,6 +39,7 @@ begin
         for var i: byte := 0 to (width - 2) do columns.Add(new Column(i, 0));
         // поток 2
         begin
+            UpdScr;
             TxtClr(Color.Green);
             Cursor.SetLeft(0);
             if (Cursor.Top > Console.WindowHeight) then

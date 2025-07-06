@@ -22,6 +22,7 @@ const
     ATTACK: string = 'атаковать';
     DEFEND: string = 'защищаться';
     USEITEM: string = 'использовать предмет';
+    BACKARROW: string = '<--';
 var
     selectres: ActionEnum;
     itemres: Item?;
@@ -46,7 +47,7 @@ begin
     end;
 end;
 
-function SubmenuSeq: sequence of string := Inventory.GetItems.Select(q -> q.name).Prepend('<--');
+function SubmenuSeq: sequence of string := Inventory.GetItems.Select(q -> q.name).Prepend(BACKARROW);
 
 function Select(const special_action: string): ActionEnum;
 const
@@ -64,7 +65,7 @@ begin
         point := 0;
         TxtClr(Color.Gray);
         var options := submenu ? _ITMS : _CMDS;
-        var cur_prompt := submenu ? ('    ' + PROMPT) : PROMPT;
+        var cur_prompt := submenu ? (TAB + PROMPT) : PROMPT;
         UpdScr;
         foreach st: string in options do writeln(cur_prompt, st);
         Cursor.GoTop(-options.Length);
@@ -118,7 +119,7 @@ begin
             Result := INV;
             Cursor.GoTop(-_CMDS.Length);
             ClearLines((_CMDS.Length + 1), True);
-            write('>>> ', USEITEM, ': ');
+            write(PROMPT, USEITEM, ': ');
             TxtClr(Color.DarkYellow);
             writeln('[', options[point], ']');
             itemres := Inventory.GetItems.First(q -> q.Name.Equals(options[point]));
