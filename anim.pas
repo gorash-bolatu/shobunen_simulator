@@ -72,12 +72,12 @@ end;
 procedure ObjectionSplash(takethat: boolean);
 begin
     var msg: string;
-    if takethat then msg := '   TAKE THAT!   '
+    if takethat then msg := 'TAKE THAT!'
     else case Random(3) of
-            0: msg := '   OBJECTION!   ';
-            1: msg := '    HOLD IT!    ';
-            2: msg := 'NO THAT''S WRONG!';
-        end;// case end
+        0: msg := 'OBJECTION!';
+        1: msg := 'HOLD IT!';
+        2: msg := 'NO, THAT''S WRONG!';
+    end; // case end
     writeln;
     var frame: byte := 0;
     repeat
@@ -86,15 +86,15 @@ begin
         else if (Cursor.Left = 0) then left_mov := +1
         else left_mov := Random(-1, +1);
         var top_mov: integer := Random(1, 2);
-        Cursor.GoXY(+left_mov, +top_mov);
+        Cursor.GoXY(left_mov, top_mov);
         Draw.ObjectionSplash(msg);
-        sleep(30);
-        Draw.Erase(18, 3);
+        sleep(35);
+        Draw.Erase(30, 3);
         Cursor.GoTop(-top_mov);
         Draw.ObjectionSplash(msg);
-        sleep(25);
+        sleep(30);
         if (frame > 8) and (Cursor.Left = 0) then break;
-        Draw.Erase(18, 3);
+        Draw.Erase(30, 3);
         frame += 1;
     until False;
     BeepWait(800, 500);
@@ -136,20 +136,20 @@ begin
                             Cursor.GoXY(-2, +2);
                             loop 4 do
                             begin
-                                Anim.Text(chr_b, delay);
+                                Text(chr_b, delay);
                                 Cursor.GoTop(-1);
                             end;
-                            Anim.Text(chr_b, delay);
+                            Text(chr_b, delay);
                         end;
                     Direction.DOWN, Direction.LEFT:
                         begin
                             Cursor.GoXY(+2, -2);
                             loop 4 do
                             begin
-                                Anim.Text(chr_b, delay);
+                                Text(chr_b, delay);
                                 Cursor.GoXY(-2, +1);
                             end;
-                            Anim.Text(chr_b, delay);
+                            Text(chr_b, delay);
                         end;
                 end;
             '\':
@@ -159,36 +159,36 @@ begin
                             Cursor.GoXY(+2, +2);
                             loop 4 do
                             begin
-                                Anim.Text(chr_b, delay);
+                                Text(chr_b, delay);
                                 Cursor.GoXY(-2, -1);
                             end;
-                            Anim.Text(chr_b, delay);
+                            Text(chr_b, delay);
                         end;
                     Direction.DOWN, Direction.RIGHT:
                         begin
                             Cursor.GoXY(-2, -2);
                             loop 4 do
                             begin
-                                Anim.Text(chr_b, delay);
+                                Text(chr_b, delay);
                                 Cursor.GoTop(+1);
                             end;
-                            Anim.Text(chr_b, delay);
+                            Text(chr_b, delay);
                         end;
                 end;
             '-':
                 if (dir = Direction.RIGHT) then
                 begin
                     Cursor.GoLeft(-3);
-                    Anim.Text(chr_b * 7, delay);
+                    Text(chr_b * 7, delay);
                 end
                 else begin
                     Cursor.GoLeft(+3);
                     loop 6 do
                     begin
-                        Anim.Text(chr_b, delay);
+                        Text(chr_b, delay);
                         Cursor.GoLeft(-2);
                     end;
-                    Anim.Text(chr_b, delay);
+                    Text(chr_b, delay);
                 end;
             '|':
                 if (dir = Direction.DOWN) then
@@ -196,19 +196,19 @@ begin
                     Cursor.GoTop(-2);
                     loop 4 do
                     begin
-                        Anim.Text(chr_b, delay);
+                        Text(chr_b, delay);
                         Cursor.GoXY(-1, +1);
                     end;
-                    Anim.Text(chr_b, delay);
+                    Text(chr_b, delay);
                 end
                 else begin
                     Cursor.GoTop(+2);
                     loop 4 do
                     begin
-                        Anim.Text(chr_b, delay);
+                        Text(chr_b, delay);
                         Cursor.GoXY(-1, -1);
                     end;
-                    Anim.Text(chr_b, delay);
+                    Text(chr_b, delay);
                 end;
         end; // case chr end
         if not erase then sleep(delay * 6);
@@ -218,4 +218,4 @@ begin
     TxtClr(orig_color);
 end;
 
-end.    
+end.

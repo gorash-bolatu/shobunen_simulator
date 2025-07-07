@@ -10,7 +10,6 @@ program shobu_sim;
 uses Procs, Scenes, Inventory, Anim, Cursor, Achievements, Chat, Achs;
 uses Plot_Prologue;
 uses _Log, _Settings;
-uses Dialogue, Actors;
 
 {$REGION интро}
 
@@ -163,7 +162,7 @@ end;
 {$ENDREGION}
 
 {$REGION main}
-begin  
+begin
     Console.Title := 'СИМУЛЯТОР ШОБУНЕНА ' + VERSION.ToLower; 
     
     if DEBUGMODE then

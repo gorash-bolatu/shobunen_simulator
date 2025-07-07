@@ -67,36 +67,99 @@ begin
     writeln('└', '─' * width, '┘');
 end;
 
+function LastChar(const self: StringBuilder): char; extensionmethod := self[self.Length - 1];
+
 procedure ObjectionSplash(const message: string);
 begin
-    var top: string := ' ' * message.Trim.Length;
-    for var n: byte := 1 to top.Length do
-        if (Random(4) > 0) then top[n] := '▓';
-    top := top.PadLeft(message.Length + 2);
-    top := top.Replace('▓ ▓ ▓', '▓ ▓▓ ').Replace('     ', '▓  ▓▓');
-    var bot: string := top;
-    top := top.Inverse;
-    var left_offset: byte := message.Length - message.TrimEnd.Length + 1;
-    var mid: string := ('▓' * Random(1, left_offset));
-    mid := mid.PadLeft(left_offset);
-    mid += (' ' * message.Trim.Length);
-    for var z: byte := (1 + message.Trim.Length) to (mid.Length) do
-        if top[z] = '▓' then mid += '▓' else break;
-    while (top[1] = ' ') and (mid[1] = ' ') and (bot[1] = ' ') do
-    begin
-        top := top.Substring(1);
-        mid := mid.Substring(1);
-        bot := bot.Substring(1);
+    var maxwidth := 19 - message.Length mod 2;
+    var top, mid, bot: StringBuilder;
+    Console.ResetColor;
+    try
+        top := new StringBuilder;
+        mid := new StringBuilder;
+        bot := new StringBuilder;
+        case Random(3) of
+            0: 
+                begin
+                    mid.Append('\');
+                    top.Append(FiftyFifty('/\', '_'.ToString));
+                    bot.Append(' ');
+                end;
+            1: 
+                begin
+                    mid.Append('|');
+                    top.Append(FiftyFifty('|\', ' _'));
+                    bot.Append(FiftyFifty('|/', ' ‾'));
+                end;
+            2:
+                begin
+                    mid.Append('/');
+                    top.Append(' ');
+                    bot.Append(FiftyFifty('\/', '‾'.ToString));
+                end;
+        end; // case end
+        repeat
+            top.Append(FiftyFifty('/\', '_'.ToString));
+        until top.Length > maxwidth;
+        top.Length := maxwidth;
+        repeat
+            bot.Append(FiftyFifty('\/', '‾'.ToString));
+        until bot.Length > maxwidth;
+        bot.Length := maxwidth;
+        mid.Append(' ' * (maxwidth - 1));
+        case Random(3) of
+            0: 
+                begin
+                    mid.Append('\');
+                    if (top.LastChar = '/') then
+                    begin
+                        top.Length -= 1;
+                        top.Append('_');
+                    end;
+                    if (bot.LastChar = '\') then bot.Append('/') else bot.Append('‾');
+                end;
+            1: 
+                begin
+                    mid.Append('|');
+                    if (top.LastChar = '/') then top.Append('|');
+                    if (bot.LastChar = '\') then bot.Append('|');
+                end;
+            2:
+                begin
+                    mid.Append('/');
+                    if (top.LastChar = '/') then top.Append('\') else top.Append('_');
+                    if (bot.LastChar = '\') then
+                    begin
+                        bot.Length -= 1;
+                        bot.Append('‾');
+                    end;
+                end;
+        end; // case end
+        Draw.Ascii(top.ToString, mid.ToString, bot.ToString);
+    finally
+        if (top <> nil) then
+        begin
+            top.Clear;
+            top := nil;
+        end;
+        if (mid <> nil) then
+        begin
+            mid.Clear;
+            mid := nil;
+        end;
+        if (bot <> nil) then
+        begin
+            bot.Clear;
+            bot := nil;
+        end;
     end;
-    TxtClr(Color.White);
-    Ascii(top, mid, bot);
+    Cursor.GoXY(+1, +1);
     BgClr(Color.White);
     TxtClr(Color.Red);
-    Cursor.GoXY(+left_offset, +1);
-    write(message.Trim);
-    Cursor.GoXY(-message.Trim.Length - left_offset, -1);
-    BgClr(Color.Black);
-    TxtClr(Color.White);
+    var padding: string := ' ' * ((maxwidth - message.Length) div 2);
+    Draw.Text(padding + message + padding);
+    Console.ResetColor;
+    Cursor.GoXY(-1, -1);
 end;
 
 end.
