@@ -4,222 +4,320 @@ interface
 
 uses Actors;
 
+/// открывает новый диалог
+procedure Open;
+/// закрывает открытый диалог
 procedure Close;
+/// перед первым Say в цепочке нужно открыть диалог через Dialogue.Open
+/// после последнего Say в цепочке нужно закрыть диалог через Dialogue.Close
 procedure Say(const speaker: Actor; params phrases: array of string);
+/// Dialogue.Say, но не требует Dialogue.Open и Dialogue.Close
+procedure FastSay(const speaker: Actor; params phrases: array of string);
+/// перед первым BulletTime в цепочке нужно открыть диалог через Dialogue.Open
+/// после последнего BulletTime в цепочке нужно закрыть диалог через Dialogue.Close
+/// возвращает строку в фигурных скобках {} по нажатию Enter/Tab/пробела
+/// возвращает nil если ничего не было нажато
+/// возвращает пустую строку если клавиша нажата там где нет фразы в фигурных скобках
 function BulletTime(const speaker: Actor; params phrases: array of string): string;
-procedure OraMuda;
-procedure Echo;
+/// не требует Dialogue.Open и Dialogue.Close
+procedure Jojo;
+/// не требует Dialogue.Open и Dialogue.Close
+procedure Echoes;
 
 implementation
 
 uses Anim, Draw, Cursor, Procs, _Settings;
 
-var
-    DialogueOpened: boolean;
-    DialogueWidth, NameWidth: byte;
-    BulletTimeMode: boolean;
-    BulletTimeCaught: string := nil;
 
-procedure Open(const speaker: Actor);
-begin
-    if DialogueOpened then writeln
-    else begin
-        Anim.Next3;
-        DialogueOpened := True;
-    end;
-    NameWidth := speaker.name.Length + 2;
-    TxtClr(Color.White);
-    Draw.Box(NameWidth, 1);
-    Cursor.GoTop(-2);
-    Cursor.SetLeft(2);
-    TxtClr(speaker.color);
-    writeln(speaker.name);
-end;
-
-procedure Close;
-begin
-    if DEBUGMODE then
-        if not DialogueOpened then raise new Exception('ПОВТОРНЫЙ DIALOGUE.CLOSE()');
-    DialogueOpened := False;
-    writelnx2;
-    TxtClr(Color.White);
-    ClrKeyBuffer;
-end;
-
-procedure Say(const speaker: Actor; params phrases: array of string);
-begin
-    if (phrases.Length = 0) then phrases := Arr('...');
-    Open(speaker);
-    var longest_phrase: string := phrases.MaxBy(q -> q.Length);
-    DialogueWidth := longest_phrase.Length + 3;
-    if BulletTimeMode then DialogueWidth -= 2;
-    if DEBUGMODE then
-        if (DialogueWidth + 3) > MIN_WIDTH then raise new Exception(
-            'СЛИШКОМ БОЛЬШАЯ СТРОКА ДИАЛОГА: "' + longest_phrase
-            + '" [' + longest_phrase.Length + '].');
-    TxtClr(Color.White);
-    if (DialogueWidth = NameWidth) then
-        writeln('├', '─' * NameWidth, '┤')
-    else if (DialogueWidth < NameWidth) then
-        writeln('├', '─' * DialogueWidth, '┬', '─' * (NameWidth - DialogueWidth - 1), '┘')
-    else writeln('├', '─' * NameWidth, '┴', '─' * (DialogueWidth - NameWidth - 1), '┐');
-    foreach n: string in phrases do
-    begin
-        writeln('│', ' ' * DialogueWidth, '│');
-        writeln('└', '─' * DialogueWidth, '┘');
-        Cursor.GoTop(-2);
-        Cursor.SetLeft(2);
-        TxtClr(Color.Yellow);
-        ClrKeyBuffer;
-        if BulletTimeMode then
+type
+    DialogueInstance = class
+    private
+        const TEXT_DELAY: byte = 27;
+        const LINE_END_DELAY: word = 400;
+        fBoxWidth, NameWidth: byte;
+        
+        procedure WriteActor(const speaker: Actor);
         begin
-            if DEBUGMODE then
-                if (n.Count(q -> q = '{') > 2) or (n.Count(q -> q = '}') > 2) then
-                    raise new Exception('СЛИШКОМ МНОГО ФИГУРНЫХ СКОБОК {}: "' + n + '"')
-                else if (n.Count(q -> q = '{') <> n.Count(q -> q = '}')) then
-                    raise new Exception('НЕЗАКРЫТЫЕ ФИГУРНЫЕ СКОБКИ {}: "' + n + '"');
-            for var c: integer := 1 to n.Length do
-            begin
-                if (c = n.IndexOf('{') + 1) then TxtClr(Color.Cyan)
-                else if (c = n.LastIndexOf('}') + 1) then TxtClr(Color.Yellow)
-                else write(n[c]);
-                var time: word := (c = n.Length) ? 1000 : 35;
-                if System.Threading.SpinWait.SpinUntil(() ->
-                (KeyAvail and (ReadKey in [Key.Enter, Key.Tab, Key.Select, Key.Spacebar])), time) then
-                begin
-                    var highlighted: string := n[n.IndexOf('{') + 2:n.LastIndexOf('}') + 1:1];
-                    if (n.Contains('{')) and (c > n.IndexOf('{')) then begin
-                        Cursor.SetLeft(2);
-                        TxtClr(Color.Yellow);
-                        write(n.Left(n.IndexOf('{')));
-                        TxtClr(Color.DarkCyan);
-                        BgClr(Color.White);
-                        write(highlighted);
-                        TxtClr(Color.Yellow);
-                        BgClr(Color.Black);
-                        write(n.Substring(n.LastIndexOf('}') + 1));
-                        BulletTimeCaught := highlighted;
-                    end
-                    else BulletTimeCaught := '';
-                    break;
-                end;
-            end;
+            NameWidth := speaker.name.Length + 2;
+            TxtClr(Color.White);
             writeln;
-            if (BulletTimeCaught <> nil) then break;
-        end
-        else begin
-            if DEBUGMODE then
-                write(n)
+            Draw.Box(NameWidth, 1);
+            Cursor.GoTop(-2);
+            Cursor.SetLeft(2);
+            TxtClr(speaker.color);
+            writeln(speaker.name);
+        end;
+    
+    protected
+        function Handled(const s: string): boolean; virtual;
+        begin
+            Result := False;
+            ClrKeyBuffer;
+            if DEBUGMODE then write(s)
             else begin
-                Anim.Text(n, 30);
-                sleep(400);
+                Anim.Text(s, TEXT_DELAY);
+                sleep(LINE_END_DELAY);
             end;
             TxtClr(Color.Cyan);
             write(' ');
             Anim.Next1;
             writeln;
+            TxtClr(Color.White);
         end;
-        TxtClr(Color.White);
+        
+        procedure SetBoxWidth(longest_len: integer); virtual := fBoxWidth := longest_len + 3;
+        
+        property BoxWidth: byte read fBoxWidth;
+    
+    public
+        
+        procedure Say(const speaker: Actor; const phrases: array of string);
+        begin
+            if DEBUGMODE then
+                if (phrases.Length = 0) then raise new Exception('НЕТ СТРОК В DIALOGUE.SAY()');
+            var longest_phrase: string := phrases.MaxBy(q -> q.Length);
+            SetBoxWidth(longest_phrase.Length);
+            WriteActor(speaker);
+            if DEBUGMODE then
+                if (fBoxWidth + 3) > MIN_WIDTH then
+                    raise new Exception('СЛИШКОМ БОЛЬШАЯ СТРОКА ДИАЛОГА: "' + longest_phrase
+                                         + '" [' + longest_phrase.Length + '].');
+            TxtClr(Color.White);
+            if (fBoxWidth = NameWidth) then
+                writeln('├', '─' * NameWidth, '┤')
+            else if (fBoxWidth < NameWidth) then
+                writeln('├', '─' * fBoxWidth, '┬', '─' * (NameWidth - fBoxWidth - 1), '┘')
+            else
+                writeln('├', '─' * NameWidth, '┴', '─' * (fBoxWidth - NameWidth - 1), '┐');
+            foreach n: string in phrases do
+            begin
+                writeln('│', ' ' * fBoxWidth, '│');
+                writeln('└', '─' * fBoxWidth, '┘');
+                Cursor.GoTop(-2);
+                Cursor.SetLeft(2);
+                TxtClr(Color.Yellow);
+                if Handled(n) then break;
+                TxtClr(Color.White);
+            end;
+        end;
+        
+        procedure Jojo;
+        begin
+            SetBoxWidth(64);
+            for var k: boolean := False to True do
+            begin
+                WriteActor(k ? Actors.Sanya : Actors.Kostyl);
+                TxtClr(Color.White);
+                writeln('├', '─' * NameWidth, '┴', '─' * (fBoxWidth - NameWidth - 1), '┐');
+                writeln('│', ' ' * fBoxWidth, '│');
+                writeln('└', '─' * fBoxWidth, '┘');
+                WritelnX2;
+                Cursor.SetLeft(2);
+                Cursor.GoTop(-3);
+            end;
+            Cursor.GoTop(-1);
+            TxtClr(Color.Yellow);
+            for var l: byte := 0 to 64 do
+            begin
+                if l > 59 then write('!') else write('ОРА'[(l mod 3) + 1]);
+                Cursor.GoTop(-5);
+                Cursor.GoLeft(-1);
+                if l > 59 then write('!') else write('МУДАК'[(l mod 5) + 1]);
+                Cursor.GoTop(+5);
+                sleep(TEXT_DELAY);
+            end;
+        end;
+        
+        procedure Echo(const speaker: Actor; params s_arr: array of string);
+        const
+            ECHOLEN: byte = 3;
+            PADDING: byte = 2;
+        begin
+            Say(speaker, s_arr);
+            Cursor.GoTop(-4);
+            TxtClr(Color.White);
+            NameWidth := 5;
+            Cursor.SetLeft(fBoxWidth + ECHOLEN);
+            writeln('┌', '─' * NameWidth, '┐');
+            Cursor.SetLeft(fBoxWidth + ECHOLEN);
+            write('│', ' ' * NameWidth, '│');
+            Cursor.SetLeft(fBoxWidth + ECHOLEN + PADDING);
+            TxtClr(Color.DarkYellow);
+            writeln('Эхо');
+            TxtClr(Color.White);
+            var longest_len := (s_arr.Max.Length + 3);
+            for var m: byte := 0 to 2 do
+            begin
+                Cursor.SetLeft(fBoxWidth + 3);
+                case m of
+                    0: writeln('├', '─' * NameWidth, '┴', '─' * (longest_len - NameWidth - 1), '┐');
+                    1: writeln('│', ' ' * longest_len, '│');
+                    2: writeln('└', '─' * longest_len, '┘');
+                end;//case end
+            end;
+            Cursor.GoTop(-2);
+            Cursor.SetLeft(fBoxWidth + ECHOLEN + PADDING);
+            TxtClr(Color.DarkCyan);
+            Anim.Text(s_arr.Max, TEXT_DELAY);
+            sleep(LINE_END_DELAY);
+            TxtClr(Color.Cyan);
+            write(' ');
+            Anim.Next1;
+            ClrKeyBuffer;
+            writeln;
+        end;
+        
+        constructor Create;
+        begin
+            Anim.Next3;
+            Cursor.GoTop(-1); 
+        end;
+        
+        destructor Destroy;
+        begin
+            WritelnX2;
+            TxtClr(Color.White);
+        end;
     end;
+    
+    BulletTimeInstance = class(DialogueInstance)
+    private
+        fCaught: string := nil;
+    
+    protected
+        function Handled(const s: string): boolean; override;
+        begin
+            if DEBUGMODE then
+                if (s.Count(q -> q = '{') > 2) or (s.Count(q -> q = '}') > 2) then
+                    raise new Exception('СЛИШКОМ МНОГО ФИГУРНЫХ СКОБОК {}: "' + s + '"')
+                else if (s.Count(q -> q = '{') <> s.Count(q -> q = '}')) then
+                    raise new Exception('НЕЗАКРЫТЫЕ ФИГУРНЫЕ СКОБКИ {}: "' + s + '"');
+            for var c: integer := 1 to s.Length do
+            begin
+                if (c = s.IndexOf('{') + 1) then TxtClr(Color.Cyan)
+                else if (c = s.LastIndexOf('}') + 1) then TxtClr(Color.Yellow)
+                else write(s[c]);
+                var spintime: word := (c = s.Length) ? 1000 : (TEXT_DELAY + 10);
+                if System.Threading.SpinWait.SpinUntil(() ->
+                (KeyAvail and (ReadKey in [Key.Enter, Key.Tab, Key.Select, Key.Spacebar])), spintime) then
+                begin
+                    var highlighted: string := s[s.IndexOf('{') + 2:s.LastIndexOf('}') + 1:1];
+                    if (s.Contains('{')) and (c > s.IndexOf('{')) then begin
+                        Cursor.SetLeft(2);
+                        TxtClr(Color.Yellow);
+                        write(s.Left(s.IndexOf('{')));
+                        TxtClr(Color.DarkCyan);
+                        BgClr(Color.White);
+                        write(highlighted);
+                        TxtClr(Color.Yellow);
+                        BgClr(Color.Black);
+                        write(s.Substring(s.LastIndexOf('}') + 1));
+                        fCaught := highlighted;
+                    end
+                    else fCaught := '';
+                    break;
+                end;
+            end;
+            writeln;
+            Result := (fCaught <> nil);
+        end;
+        
+        procedure SetBoxWidth(longest_len: integer); override := inherited SetBoxWidth(longest_len - 1);
+    
+    public
+        property Caught: string read fCaught;
+        
+        constructor Create;
+        begin
+            inherited Create;
+        end;
+        
+        destructor Destroy;
+        begin
+            inherited Destroy;
+            fCaught := nil;
+        end;
+    end;
+// type end
+
+var
+    current: DialogueInstance;
+
+// todo убрать в релизе
+procedure __CheckIsDialogueOpened;
+begin
+    if not DEBUGMODE then exit;
+    if (current = nil) then raise new Exception('НЕТ ОТКРЫТОГО ДИАЛОГА');
+end;
+
+// убрать в релизе
+procedure __CheckIsDialogueClosed;
+begin
+    if not DEBUGMODE then exit;
+    if (current <> nil) then raise new Exception('ДИАЛОГ УЖЕ ОТКРЫТ');
+end;
+
+procedure Open;
+begin
+    __CheckIsDialogueClosed;
+    current := new DialogueInstance;
+end;
+
+procedure Close;
+begin
+    __CheckIsDialogueOpened;
+    current.Destroy;
+    current := nil;
+end;
+
+procedure Say(const speaker: Actor; params phrases: array of string);
+begin
+    __CheckIsDialogueOpened;
+    current.Say(speaker, phrases);
+end;
+
+procedure FastSay(const speaker: Actor; params phrases: array of string);
+begin
+    Open;
+    current.Say(speaker, phrases);
+    Close;
 end;
 
 function BulletTime(const speaker: Actor; params phrases: array of string): string;
 begin
-    BulletTimeCaught := nil;
-    BulletTimeMode := True;
-    Say(speaker, phrases);
-    BulletTimeMode := False;
-    if (BulletTimeCaught <> nil) then
+    __CheckIsDialogueClosed;
+    var current_bt: BulletTimeInstance := new BulletTimeInstance;
+    current_bt.Say(speaker, phrases);
+    if (current_bt.Caught <> nil) then
     begin
         writeln;
         Anim.Objection;
-        ReadKey;
     end;
     TxtClr(Color.White);
-    Result := BulletTimeCaught;
+    Result := current_bt.Caught;
+    current_bt.Destroy;
+    current_bt := nil;
 end;
 
-procedure OraMuda;
+procedure Jojo;
 begin
-    DialogueOpened := True;
-    DialogueWidth := 67;
-    for var k: boolean := False to True do
-    begin
-        Open(k ? Actors.Sanya : Actors.Kostyl);
-        TxtClr(Color.White);
-        writeln('├', '─' * NameWidth, '┴', '─' * (DialogueWidth - NameWidth - 1), '┐');
-        writeln('│', ' ' * DialogueWidth, '│');
-        writeln('└', '─' * DialogueWidth, '┘');
-        Cursor.SetLeft(2);
-        Cursor.GoTop(-1);
-    end;
-    Cursor.GoTop(-1);
-    TxtClr(Color.Yellow);
-    for var l: byte := 0 to 64 do
-    begin
-        if l > 59 then write('!') else write('ОРА'[(l mod 3) + 1]);
-        Cursor.GoTop(-5);
-        Cursor.GoLeft(-1);
-        if l > 59 then write('!') else write('МУДАК'[(l mod 5) + 1]);
-        Cursor.GoTop(+5);
-        sleep(25);
-    end;
-    writeln;
+    Open;
+    current.Jojo;
     Close;
-    ReadKey;
+    Anim.Next3;
 end;
 
-procedure Echo;
-const
-    u_a: array of string = ('Грррр...', 'КОООСТЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯ!!!');
-    u_b: array of string = ('СССССАААНЯ!');
+procedure Echoes;
 begin
-    for var k := True downto False do
-    begin
-        DialogueOpened := True;
-        var z_arr: array of string;
-        z_arr := k ? u_a : u_b;
-        Say((k ? Actors.Sanya : Actors.Kostyl), z_arr);
-        Close;
-        Cursor.GoTop(-6);
-        DialogueOpened := True;
-        TxtClr(Color.White);
-        NameWidth := 5;
-        Cursor.SetLeft(DialogueWidth + 3);
-        writeln('┌', '─' * NameWidth, '┐');
-        Cursor.SetLeft(DialogueWidth + 3);
-        write('│', ' ' * NameWidth, '│');
-        Cursor.SetLeft(DialogueWidth + 5);
-        TxtClr(Color.DarkYellow);
-        writeln('Эхо');
-        TxtClr(Color.White);
-        var z_arr_l := (z_arr.Max.Length + 3);
-        for var m: byte := 0 to 2 do
-        begin
-            Cursor.SetLeft(DialogueWidth + 3);
-            case m of
-                0: writeln('├', '─' * NameWidth, '┴', '─' * (z_arr_l - NameWidth - 1), '┐');
-                1: writeln('│', ' ' * z_arr_l, '│');
-                2: writeln('└', '─' * z_arr_l, '┘');
-            end;//case end
-        end;
-        Cursor.GoTop(-2);
-        Cursor.SetLeft(DialogueWidth + 5);
-        TxtClr(Color.DarkCyan);
-        Anim.Text(z_arr.Max, 25);
-        sleep(400);
-        writeln;
-        Anim.Next3;
-        ClrKeyBuffer;
-        Close;
-        Cursor.GoTop(-3);
-    end;
-    writelnx2;
+    Open;
+    current.Echo(Actors.Sanya, 'Грррр...', 'КОООСТЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯ!!!');
+    current.Echo(Actors.Kostyl, 'СССССАААНЯ!');
+    Close;
 end;
 
 initialization
 
 finalization
-    BulletTimeCaught := nil;
+    current := nil;
 
 end.

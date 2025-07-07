@@ -31,28 +31,23 @@ type
 
 procedure Transition;
 begin
-    var width: integer := BufWidth;
+    UpdScr;
+    var width: longword := BufWidth;
     var columns: HashSet<Column> := new HashSet<Column>(width);
-    {$omp parallel sections}
-    begin
-        // поток 1
-        for var i: byte := 0 to (width - 2) do columns.Add(new Column(i, 0));
-        // поток 2
-        begin
-            UpdScr;
-            TxtClr(Color.Green);
-            Cursor.SetLeft(0);
-            if (Cursor.Top > Console.WindowHeight) then
-                Cursor.SetTop(Cursor.Top - Console.WindowHeight + 1)
-            else
-                Cursor.SetTop(0);
-        end;
-    end;
-    var starttime: longword := ElapsedMS;
+    for var i: byte := 0 to (width - 2) do columns.Add(new Column(i, 0));
+    TxtClr(Color.Green);
+    Cursor.SetLeft(0);
+    var original_cur_top: integer;
+    if (Cursor.Top > Console.WindowHeight) then
+        original_cur_top := Cursor.Top - Console.WindowHeight + 1
+    else
+        original_cur_top := 0;
+    Cursor.SetTop(original_cur_top);
     var current: Column;
-    var height_cap: integer := Cursor.Top + Console.WindowHeight - 3;
-    var original_cur_top: integer := Cursor.Top;
+    var cycle: byte;
+    var starttime: longword := ElapsedMS;
     repeat
+        cycle += 1;
         if (BufWidth < width) then
         begin
             Console.BufferWidth := width;
@@ -61,9 +56,10 @@ begin
         current := columns.ElementAt(Random(columns.Count));
         Cursor.SetLeft(current.Position);
         Cursor.SetTop(original_cur_top + current.Height);
-        Draw.TextVert(RandChar());
+        write(RandChar());
         current.Height += 1;
-        if (current.Height > height_cap) then columns.Remove(current);
+        if (current.Height >= Console.WindowHeight) then columns.Remove(current);
+        if (cycle mod 13 = 0) and (MillisecondsDelta < 1) then sleep(1);
     until (columns.Count < ((ElapsedMS - starttime) shr 6));
     ClrScr;
     sleep(400);
@@ -117,8 +113,7 @@ begin
     print('>');
     Anim.Text('Тук-тук, Саня.', 65);
     sleep(300);
-    ClrKeyBuffer;
-    ReadKey;
+    Dialogue.Open;
     Cursor.Hide;
     NextSlide;
     Dialogue.Say(Actors.MatrixRita,
@@ -187,17 +182,16 @@ begin
     Dialogue.Say(Actors.Sanya, 'Меня зовут... Саня!');
     NextSlide;
     TextToSpeech.Init;
-    TextToSpeech.Architect(NewLine + 'Здравствуй, Саня');
-    Dialogue.Say(Actors.Sanya, 'Кто ты такой?');
     Dialogue.Close;
+    TextToSpeech.Architect(NewLine + 'Здравствуй, Саня');
+    Dialogue.FastSay(Actors.Sanya, 'Кто ты такой?');
     TextToSpeech.Architect(
        'Я главный разработчик. Я создал Симулятор. Вот мы и встретились',
        'У тебя много вопросов. Проникновение в Симулятор изменило твоё сознание',
        'Но ты по-прежнему человек',
        'Следовательно, многие ответы ты поймёшь, а многие другие - нет',
        'Скоро ты узнаешь, что меньше всего относится к сути дела');
-    Dialogue.Say(Actors.Sanya, 'Что за?..');
-    Dialogue.Close;
+    Dialogue.FastSay(Actors.Sanya, 'Что за?..');
     TextToSpeech.Architect(
        'Симулятор намного старше, чем ты думаешь',
        'Я предпочитаю лимитировать эпоху Симулятора очередным билдом',
@@ -205,8 +199,7 @@ begin
        'Первый Симулятор, который я создал, был произведением искусства. Совершенством',
        'Его триумф сравним лишь с его монументальным крахом',
        'Неизбежность этого краха является следствием убогости языка PascalABC.NET');
-    Dialogue.Say(Actors.Sanya, 'Дерьмо!');
-    Dialogue.Close;
+    Dialogue.FastSay(Actors.Sanya, 'Дерьмо!');
     TextToSpeech.Architect(
        'Короче... Примешь синюю таблетку - и сказке конец',
        'Ты проснёшься в своей постели и поверишь, что это был сон',
